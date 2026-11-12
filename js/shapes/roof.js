@@ -16,7 +16,7 @@ export const roofShape = {
   category: 'roof',
   controlsId: 'roof-axis-row', // 選択中のみ表示する専用UI
 
-  build({ ox, oy, oz, sx, sy, sz, params }, { mat, edgeMat, wireframe }) {
+  build({ ox, oy, oz, sx, sy, sz, params }, { mat, edgeMat }) {
     const voxels = params.gable
       ? computeGableVoxels(sx, sy, sz, params.axis)
       : computeRoofVoxels(sx, sy, sz, params.axis);
@@ -27,7 +27,6 @@ export const roofShape = {
       mesh.position.set(ox + lx + VOXEL.half, oy + ly + VOXEL.half, oz + lz + VOXEL.half);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      mesh.visible = !wireframe;
       const edges = new THREE.LineSegments(UNIT_EDGE_GEO, edgeMat.clone());
       edges.visible = true;
       mesh.add(edges);

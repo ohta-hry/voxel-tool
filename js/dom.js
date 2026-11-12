@@ -24,8 +24,6 @@ export const dom = {
   canvasXInput: inputById('canvas-x'),
   canvasZInput: inputById('canvas-z'),
   btnApplySettings: byId('btn-apply-settings'),
-  chkWireframe: inputById('chk-wireframe'),
-  chkWireframeIcon: byId('chk-wireframe-icon'),
   chkEdgeVoxel: inputById('chk-edge-voxel'),
   chkEdgeVoxelIcon: byId('chk-edge-voxel-icon'),
 };

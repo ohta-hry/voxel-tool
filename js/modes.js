@@ -2,7 +2,7 @@ import { state } from './state.js';
 import { scene } from './scene.js';
 import { getShape, makeEdgeVoxelGroupForEntry } from './shapes/index.js';
 
-// 表示モード（ワイヤーフレーム/辺ボクセル）の適用。形状ごとの違いは shape プラグイン側が持つ。
+// 表示モード（辺ボクセル）の適用。形状ごとの違いは shape プラグイン側が持つ。
 // registry には依存せず、エントリ配列は呼び出し側から受け取る。
 
 // 新規作成/再構築したエントリに、現在の表示モードを反映する
@@ -11,17 +11,10 @@ import { getShape, makeEdgeVoxelGroupForEntry } from './shapes/index.js';
 export function applyDisplayModesToEntry(entry) {
   const shape = getShape(entry.type);
   if (!shape.edgeVoxels) return;
-  shape.setVisibility(entry.mesh, !state.edgeVoxelMode && !state.wireframeMode, !state.edgeVoxelMode);
+  shape.setVisibility(entry.mesh, !state.edgeVoxelMode, !state.edgeVoxelMode);
   if (state.edgeVoxelMode) {
     entry.edgeGroup = makeEdgeVoxelGroupForEntry(entry);
     scene.add(entry.edgeGroup);
-  }
-}
-
-/** @param {import('./types.js').BoxEntry[]} entries */
-export function applyWireframeMode(entries) {
-  for (const e of entries) {
-    getShape(e.type).setVisibility(e.mesh, !state.wireframeMode, true);
   }
 }
 
@@ -31,7 +24,7 @@ export function applyEdgeVoxelMode(entries) {
     const shape = getShape(e.type);
     if (!shape.edgeVoxels) continue; // 表示状態を変えない
 
-    shape.setVisibility(e.mesh, !state.edgeVoxelMode && !state.wireframeMode, !state.edgeVoxelMode);
+    shape.setVisibility(e.mesh, !state.edgeVoxelMode, !state.edgeVoxelMode);
 
     if (state.edgeVoxelMode) {
       if (!e.edgeGroup) {

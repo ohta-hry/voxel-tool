@@ -1,0 +1,58 @@
+/* ── 設定ドロワー（表示 / データ 切り替え）── styles.css の後に読み込む ── */
+
+/* 切り替えボタン（セグメント式） */
+.seg-toggle {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border: 1px solid #2a2f3d;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1b1f2a;
+}
+.seg-btn {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 7px 4px;
+  border: none;
+  background: none;
+  color: #555c70;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: color 0.15s, background 0.15s;
+}
+.seg-btn + .seg-btn { border-left: 1px solid #2a2f3d; }
+.seg-btn.active { background: #1e2d42; color: #8ec8f8; }
+.seg-btn:active { color: #aad4ff; }
+
+/* ペイン（表示 / データ） */
+.drawer-pane { display: none; flex-direction: column; gap: 8px; }
+.drawer-pane.active { display: flex; }
+
+.drawer-sep { border-top: 1px solid #2a2f3d; margin: 2px 0; }
+
+/* ファイル名テキストボックス */
+.setting-text {
+  background: #1b1f2a;
+  border: 1px solid #2a2f3d;
+  border-radius: 6px;
+  color: #e0e4ef;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  outline: none;
+  padding: 7px 8px;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.setting-text:focus { border-color: #4a90d9; }
+
+/* 大きなボタン（「✓ 適用」#btn-apply-settings と同じ見た目・大きさ） */
+#btn-data-action {
+  background: #1e3a28; border: 1px solid #2e6040; color: #6fd89a;
+  font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 1px;
+  padding: 7px; border-radius: 6px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#btn-data-action:active { background: #2a5035; }

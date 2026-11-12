@@ -40,7 +40,6 @@
  * @property {import('three').Material} mat        面のマテリアル
  * @property {import('three').Material} edgeMat    エッジのマテリアル
  * @property {boolean} confirmed                   確定済み（Face Culling 等の最適化を適用）か、プレビューか
- * @property {boolean} wireframe                   ワイヤーフレームモード中か（面を非表示にして生成する）
  */
 
 /**
@@ -81,7 +80,6 @@
  * @property {string} activeColor       '#rrggbb'
  * @property {RoofAxis} roofAxis        屋根の勾配軸（フォーム/プレビュー用）
  * @property {boolean} roofGable        両屋根（切妻）モード
- * @property {boolean} wireframeMode
  * @property {boolean} edgeVoxelMode
  * @property {number} editingIndex      -1 = 通常モード, >=0 = そのボックスを編集中
  */

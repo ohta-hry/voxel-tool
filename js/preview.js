@@ -5,14 +5,12 @@ import { scene } from './scene.js';
 import { disposeObject3D } from './dispose.js';
 import { registry } from './registry.js';
 import { createSolidMaterial, PREVIEW_MAT, PREVIEW_EMAT } from './materials.js';
-import { getShape, buildShapeMesh, readParamsFromState } from './shapes/index.js';
+import { buildShapeMesh, readParamsFromState } from './shapes/index.js';
 import { readShapeSpec } from './form.js';
 import { hexToInt } from './utils.js';
 
 /** @type {import('three').Object3D | null} */
 let previewMesh = null;
-/** @type {string | null} */
-let previewType = null;
 
 /** フォームの値と選択中の形状でプレビューを作り直す */
 export function updatePreview() {
@@ -34,14 +32,5 @@ export function updatePreview() {
   const mesh = buildShapeMesh(spec, { mat, edgeMat: PREVIEW_EMAT, confirmed: false });
 
   previewMesh = mesh;
-  previewType = type;
-  refreshPreviewVisibility();
   scene.add(mesh);
-}
-
-// ワイヤーフレームモード切替時にプレビューの表示だけ更新する（面を隠してエッジのみ表示）
-
-export function refreshPreviewVisibility() {
-  if (!previewMesh) return;
-  getShape(previewType).setVisibility(previewMesh, !state.wireframeMode, true);
 }

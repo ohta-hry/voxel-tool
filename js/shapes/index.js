@@ -36,7 +36,7 @@ export const getShape = type => shapes.get(type) ?? shapes.get(SHAPE_TYPE.BOX);
 /** @param {import('../types.js').ShapeSpec} spec
  * @param {{ mat: import('three').Material, edgeMat: import('three').Material, confirmed?: boolean }} ctx */
 export function buildShapeMesh(spec, { mat, edgeMat, confirmed = false }) {
-  return getShape(spec.type).build(spec, { mat, edgeMat, confirmed, wireframe: state.wireframeMode });
+  return getShape(spec.type).build(spec, { mat, edgeMat, confirmed });
 }
 
 // 辺ボクセル表示用グループ。辺ボクセルモードの対象外の形状は null

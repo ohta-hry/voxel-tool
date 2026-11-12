@@ -14,14 +14,12 @@ export const boxShape = {
   icon: TYPE_SVGS.box,
   category: 'solid', // 編集中に変更できるのは同じ category 内のみ
 
-  build({ ox, oy, oz, sx, sy, sz }, { mat, edgeMat, wireframe }) {
+  build({ ox, oy, oz, sx, sy, sz }, { mat, edgeMat }) {
     const geo = new THREE.BoxGeometry(sx, sy, sz);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(ox + sx / 2, oy + sy / 2, oz + sz / 2);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    // ワイヤーフレームモード時は面を非表示（エッジは常に表示）
-    mesh.visible = !wireframe;
     const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat);
     edges.visible = true;
     mesh.add(edges);

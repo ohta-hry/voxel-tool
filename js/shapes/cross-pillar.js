@@ -31,7 +31,7 @@ export const crossPillarShape = {
 
   // 各フットプリントセルを1×sy×1の直方体にした Group
   // confirmed=true のとき内部面カリング＋外形輪郭エッジを適用
-  build({ ox, oy, oz, sx, sy, sz }, { mat, edgeMat, confirmed, wireframe }) {
+  build({ ox, oy, oz, sx, sy, sz }, { mat, edgeMat, confirmed }) {
     const cells = crossPillarFootprint(sx, sz);
     const cellSet = toCellSet(cells);
     const group = new THREE.Group();
@@ -44,7 +44,6 @@ export const crossPillarShape = {
       mesh.position.set(ox + lx + VOXEL.half, posY, oz + lz + VOXEL.half);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      mesh.visible = !wireframe;
 
       if (!confirmed) {
         // プレビュー時: 各セルに EdgesGeometry

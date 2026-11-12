@@ -18,7 +18,6 @@ const data = {
   roofAxis: ROOF_AXIS.PLUS_X,
   roofGable: false,
 
-  wireframeMode: false,
   edgeVoxelMode: false,
 
   editingIndex: -1, // -1 = 通常モード, >=0 = そのボックスを編集中
