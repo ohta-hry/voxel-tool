@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { THEME, UI, SCENE, VOXEL, TIMING } from './config.js';
 import { OrbitControls } from './orbit-controls.js';
+import { PRESET_COLORS, initColorUI } from './color.js';
+import { initPersistence } from './persistence.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const container = document.getElementById('canvas-container');
@@ -86,6 +88,9 @@ function buildGrid(cx, cz) {
 buildGrid(canvasX, canvasZ);
 
 // ── Box data ──────────────────────────────────────────────────────────────────
+let persistenceApi;
+function autoSave() { persistenceApi?.autoSave(); }
+
 const PREVIEW_MAT  = createSolidMaterial(THEME.color.preview, { opacity:THEME.opacity.preview, depthWrite:false });
 const PREVIEW_EMAT = createEdgeMaterial(THEME.color.previewEdge, { opacity:THEME.opacity.previewEdge });
 const SELECT_EMAT  = createEdgeMaterial(THEME.color.selectedEdge, { opacity:1.0 });
@@ -933,194 +938,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ── Color system ──────────────────────────────────────────────────────────────
-const PRESET_COLORS = [
-  '#ffffff','#909090','#343434','#815631',
-  '#B02E26','#F9801D','#FED83D','#80C71F',
-  '#5E7C16','#3AB3DA','#3C44AA','#C74EBD'
-];
-
-let activeColor = PRESET_COLORS[UI.defaultColorIndex]; // デフォルト：ターコイズ（既存自動色1）
-
-// パレット生成
-const palette = document.getElementById('color-palette');
-PRESET_COLORS.forEach(hex => {
-  const sw = document.createElement('button');
-  sw.className = 'color-swatch';
-  sw.style.background = hex;
-  sw.dataset.color = hex;
-  sw.addEventListener('click', () => {
-    setActiveColor(hex);
-    applyColorToTarget();
-  });
-  palette.appendChild(sw);
+let activeColor = PRESET_COLORS[UI.defaultColorIndex];
+const colorUI = initColorUI({
+  UI,
+  getActiveColor: () => activeColor,
+  setColorState: hex => { activeColor = hex; },
+  getEditingIndex: () => editingIndex,
+  getPlacedBoxes: () => placedBoxes,
+  scene, hexToInt, makeEdgeVoxelGroupForEntry, confirmEdit, placeBox
 });
 
-function updateSwatchSelection(hex) {
-  document.querySelectorAll('.color-swatch').forEach(sw => {
-    sw.classList.toggle('selected', sw.dataset.color.toLowerCase() === hex.toLowerCase());
-  });
-}
-
-const pickerPreview = document.getElementById('color-picker-preview');
-
-function setActiveColor(hex) {
-  // normalize to 6-digit hex
-  if (hex.length === UI.hexShortLength) hex = '#'+hex[1]+hex[1]+hex[2]+hex[2]+hex[3]+hex[3];
-  activeColor = hex;
-  pickerPreview.style.background = hex;
-  updateSwatchSelection(hex);
-}
-
-// ── Custom Color Picker ───────────────────────────────────────────────────────
-let cpHue = 0, cpSat = 1, cpVal = 1;
-
-function hsvToRgb(h, s, v) {
-  let r,g,b;
-  const i = Math.floor(h*6), f=h*6-i, p=v*(1-s), q=v*(1-f*s), t=v*(1-(1-f)*s);
-  switch(i%6){case 0:r=v,g=t,b=p;break;case 1:r=q,g=v,b=p;break;case 2:r=p,g=v,b=t;break;
-              case 3:r=p,g=q,b=v;break;case 4:r=t,g=p,b=v;break;case 5:r=v,g=p,b=q;break;}
-  return [Math.round(r*255),Math.round(g*255),Math.round(b*255)];
-}
-function rgbToHex(r,g,b){return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');}
-function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return[r,g,b];}
-function rgbToHsv(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
-  let h=0;if(d>0){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h/=6;if(h<0)h+=1;}
-  return[h,mx===0?0:d/mx,mx];}
-
-const cpSvCanvas  = document.getElementById('cp-sv-canvas');
-const cpHueCanvas = document.getElementById('cp-hue-canvas');
-const cpHexInput  = document.getElementById('cp-hex-input');
-const cpPreview   = document.getElementById('cp-preview-swatch');
-const modalCp     = document.getElementById('modal-color-picker');
-
-function cpDrawSV() {
-  const ctx = cpSvCanvas.getContext('2d');
-  const w = cpSvCanvas.width, h = cpSvCanvas.height;
-  // white→hue gradient (horizontal)
-  const gH = ctx.createLinearGradient(0,0,w,0);
-  gH.addColorStop(0,'#fff');
-  const [hr,hg,hb] = hsvToRgb(cpHue,1,1);
-  gH.addColorStop(1,`rgb(${hr},${hg},${hb})`);
-  ctx.fillStyle = gH; ctx.fillRect(0,0,w,h);
-  // black gradient (vertical)
-  const gV = ctx.createLinearGradient(0,0,0,h);
-  gV.addColorStop(0,'rgba(0,0,0,0)'); gV.addColorStop(1,'#000');
-  ctx.fillStyle = gV; ctx.fillRect(0,0,w,h);
-  // cursor
-  const cx = cpSat*w, cy = (1-cpVal)*h;
-  ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2);
-  ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx,cy,7,0,Math.PI*2);
-  ctx.strokeStyle='#000'; ctx.lineWidth=1; ctx.stroke();
-}
-function cpDrawHue() {
-  const ctx = cpHueCanvas.getContext('2d');
-  const w = cpHueCanvas.width, h = cpHueCanvas.height;
-  const g = ctx.createLinearGradient(0,0,w,0);
-  for(let i=0;i<=6;i++) g.addColorStop(i/6,`hsl(${i*60},100%,50%)`);
-  ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-  // cursor line
-  const x = cpHue*w;
-  ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-  ctx.strokeRect(x-3,0,6,h);
-}
-function cpUpdateFromHSV() {
-  const [r,g,b] = hsvToRgb(cpHue,cpSat,cpVal);
-  const hex = rgbToHex(r,g,b);
-  cpHexInput.value = hex;
-  cpPreview.style.background = hex;
-  cpDrawSV(); cpDrawHue();
-}
-function cpSyncCanvas() {
-  cpSvCanvas.width  = cpSvCanvas.offsetWidth;
-  cpSvCanvas.height = cpSvCanvas.offsetWidth; // square
-  cpHueCanvas.width  = cpHueCanvas.offsetWidth;
-  cpHueCanvas.height = cpHueCanvas.offsetHeight || 20;
-  cpUpdateFromHSV();
-}
-
-// Pointer events for SV canvas
-function cpSvPointer(e) {
-  e.preventDefault();
-  const r = cpSvCanvas.getBoundingClientRect();
-  const cx = e.touches ? e.touches[0].clientX : e.clientX;
-  const cy = e.touches ? e.touches[0].clientY : e.clientY;
-  cpSat = Math.max(0,Math.min(1,(cx-r.left)/r.width));
-  cpVal = Math.max(0,Math.min(1,1-(cy-r.top)/r.height));
-  cpUpdateFromHSV();
-}
-cpSvCanvas.addEventListener('pointerdown', e=>{cpSvPointer(e); cpSvCanvas.setPointerCapture(e.pointerId);});
-cpSvCanvas.addEventListener('pointermove', e=>{if(e.buttons)cpSvPointer(e);});
-
-// Pointer events for Hue canvas
-function cpHuePointer(e) {
-  e.preventDefault();
-  const r = cpHueCanvas.getBoundingClientRect();
-  const cx = e.touches ? e.touches[0].clientX : e.clientX;
-  cpHue = Math.max(0,Math.min(1 - Number.EPSILON,(cx-r.left)/r.width));
-  cpUpdateFromHSV();
-}
-cpHueCanvas.addEventListener('pointerdown', e=>{cpHuePointer(e); cpHueCanvas.setPointerCapture(e.pointerId);});
-cpHueCanvas.addEventListener('pointermove', e=>{if(e.buttons)cpHuePointer(e);});
-
-// HEX input
-cpHexInput.addEventListener('change', () => {
-  let h = cpHexInput.value.trim();
-  if(!h.startsWith('#')) h='#'+h;
-  if(!/^#[0-9a-fA-F]{6}$/.test(h)) return;
-  const [r,g,b] = hexToRgb(h);
-  [cpHue,cpSat,cpVal] = rgbToHsv(r,g,b);
-  cpUpdateFromHSV();
-});
-
-// Open/close
-document.getElementById('btn-open-color-picker').addEventListener('click', () => {
-  // Init from activeColor
-  const [r,g,b] = hexToRgb(activeColor);
-  [cpHue,cpSat,cpVal] = rgbToHsv(r,g,b);
-  modalCp.classList.add('open');
-  requestAnimationFrame(cpSyncCanvas);
-});
-document.getElementById('cp-btn-ok').addEventListener('click', () => {
-  setActiveColor(cpHexInput.value);
-  applyColorToTarget();
-  modalCp.classList.remove('open');
-});
-document.getElementById('cp-btn-cancel').addEventListener('click', () => {
-  modalCp.classList.remove('open');
-});
-
-function applyColorToTarget() {
-  if (editingIndex >= 0) {
-    // 編集中ボックスにリアルタイム反映
-    const entry = placedBoxes[editingIndex];
-    entry.color = hexToInt(activeColor);
-    // mesh or Group の全マテリアルに色反映
-    if (entry.mesh.userData && entry.mesh.userData.isCrossPillar) {
-      for (const child of entry.mesh.children) {
-        if (child.userData && child.userData.isOutlineEdge) continue;
-        child.material.color.setHex(entry.color);
-      }
-    } else if (entry.mesh.userData && entry.mesh.userData.isRoof) {
-      // roofはGroupなのでchild(各ボクセルMesh)のmaterialに適用
-      for (const child of entry.mesh.children) {
-        if (child.material) child.material.color.setHex(entry.color);
-      }
-    } else {
-      entry.mesh.material.color.setHex(entry.color);
-    }
-    // edgeGroupがあれば再生成
-    if (entry.edgeGroup) {
-      scene.remove(entry.edgeGroup);
-      entry.edgeGroup = makeEdgeVoxelGroupForEntry(entry);
-      scene.add(entry.edgeGroup);
-    }
-  }
-  // 非編集時は何もしない
-}
-
-// タブBの適用ボタン → タブAと同じ confirmEdit / placeBox 動作
-// タブBの適用ボタン
 document.getElementById('btn-apply-color').addEventListener('click', () => {
   if (editingIndex >= 0) confirmEdit();
   // 非編集時は何もしない
@@ -1264,175 +1091,19 @@ chkEdgeVoxel.addEventListener('change', () => {
 });
 
 // ── Export / Import ───────────────────────────────────────────────────────────
-function createSaveData() {
-  return {
-    canvasX, canvasZ,
-    boxes: placedBoxes.map(e => ({
-      ox:e.ox, oy:e.oy, oz:e.oz,
-      sx:e.sx, sy:e.sy, sz:e.sz,
-      color:e.color, label:e.label,
-      type: e.type || 'box',
-      // roof専用: DDA勾配軸 (+x/-x/+z/-z)
-      roofAxis: (e.type === 'roof') ? (e.roofAxis || '+x') : undefined,
-      roofGable: (e.type === 'roof') ? (!!e.roofGable) : undefined
-    }))
-  };
-}
-
-function normalizeRoofAxisValue(value, fallback = '+x') {
-  if (!value) return fallback;
-  if (value === '+x' || value === '-x' || value === '+z' || value === '-z') return value;
-  const normalized = '+' + value;
-  return (normalized === '+x' || normalized === '+z') ? normalized : fallback;
-}
-
-function restoreBoxFromData(b) {
-  const btype = (b.type && SHAPE_DEFS[b.type]) ? b.type : 'box';
-  const savedRoofAxis = btype === 'roof' ? normalizeRoofAxisValue(b.roofAxis, roofAxis) : undefined;
-  const savedRoofGable = btype === 'roof' ? !!b.roofGable : undefined;
-
-  if (btype === 'roof') {
-    roofAxis = savedRoofAxis;
-    roofGable = savedRoofGable;
+persistenceApi = initPersistence({
+  UI, THEME, TIMING, scene, placedBoxes, SHAPE_DEFS, chkEdgeVoxel, chkEdgeIcon, drawer, toggleBtn,
+  removeAllEntriesFromScene, enterNormalMode, buildGrid, updateRoofAxisButtons,
+  createSolidMaterial, createEdgeMaterial, makeShapeMesh, createEntry, refreshDropdown, updatePreview,
+  state: {
+    get canvasX() { return canvasX; }, set canvasX(value) { canvasX = value; },
+    get canvasZ() { return canvasZ; }, set canvasZ(value) { canvasZ = value; },
+    get roofAxis() { return roofAxis; }, set roofAxis(value) { roofAxis = value; },
+    get roofGable() { return roofGable; }, set roofGable(value) { roofGable = value; },
+    get edgeVoxelMode() { return edgeVoxelMode; }, set edgeVoxelMode(value) { edgeVoxelMode = value; }
   }
-
-  const mat = createSolidMaterial(b.color);
-  const edgeMat = createEdgeMaterial();
-  const mesh = makeShapeMesh(btype, b.ox,b.oy,b.oz,b.sx,b.sy,b.sz,mat,edgeMat, true);
-  scene.add(mesh);
-  const entry = createEntry({
-    mesh,
-    ox:b.ox, oy:b.oy, oz:b.oz,
-    sx:b.sx, sy:b.sy, sz:b.sz,
-    color:b.color,
-    type:btype,
-    roofAxis:savedRoofAxis,
-    roofGable:savedRoofGable,
-    edgeGroup:null
-  });
-  placedBoxes.push(entry);
-}
-
-function loadSceneData(data, { clearExisting=false, resetMode=false, disableEdgeVoxel=false, saveAfterLoad=false } = {}) {
-  if (!data || !Array.isArray(data.boxes)) return false;
-
-  if (disableEdgeVoxel && edgeVoxelMode) {
-    edgeVoxelMode = false;
-    chkEdgeVoxel.checked = false;
-    chkEdgeIcon.textContent = '';
-  }
-
-  if (clearExisting) removeAllEntriesFromScene();
-  if (resetMode) enterNormalMode();
-
-  canvasX = data.canvasX || UI.defaultCanvasSize;
-  canvasZ = data.canvasZ || UI.defaultCanvasSize;
-  document.getElementById('canvas-x').value = canvasX;
-  document.getElementById('canvas-z').value = canvasZ;
-  buildGrid(canvasX, canvasZ);
-
-  for (const b of data.boxes) restoreBoxFromData(b);
-
-  refreshDropdown();
-  if (typeof updateRoofAxisButtons === 'function') updateRoofAxisButtons();
-  updatePreview();
-  if (saveAfterLoad) autoSave();
-  return true;
-}
-
-function serializeSave() {
-  const data = createSaveData();
-  return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-}
-
-function deserializeSave(code) {
-  try {
-    return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-  } catch(e) {
-    return null;
-  }
-}
-
-// Open export modal
-document.getElementById('btn-export-save').addEventListener('click', () => {
-  const code = serializeSave();
-  document.getElementById('export-textarea').value = code;
-  document.getElementById('modal-export').classList.add('open');
 });
 
-// Copy code
-document.getElementById('btn-export-copy').addEventListener('click', () => {
-  const ta = document.getElementById('export-textarea');
-  ta.select();
-  navigator.clipboard.writeText(ta.value).catch(() => {
-    document.execCommand('copy');
-  });
-  document.getElementById('btn-export-copy').textContent = '✓ コピー完了';
-  setTimeout(() => { document.getElementById('btn-export-copy').textContent = '📋 コピー'; }, TIMING.feedbackMs);
-});
-
-document.getElementById('btn-export-close').addEventListener('click', () => {
-  document.getElementById('modal-export').classList.remove('open');
-});
-
-// Open import modal
-document.getElementById('btn-import-save').addEventListener('click', () => {
-  document.getElementById('import-textarea').value = '';
-  document.getElementById('modal-import').classList.add('open');
-});
-
-document.getElementById('btn-import-cancel').addEventListener('click', () => {
-  document.getElementById('modal-import').classList.remove('open');
-});
-
-document.getElementById('btn-import-load').addEventListener('click', () => {
-  const code = document.getElementById('import-textarea').value;
-  const data = deserializeSave(code);
-  if (!data) {
-    document.getElementById('import-textarea').style.borderColor = THEME.css.errorBorder;
-    setTimeout(() => { document.getElementById('import-textarea').style.borderColor = ''; }, TIMING.feedbackMs);
-    return;
-  }
-
-  const loaded = loadSceneData(data, {
-    clearExisting: true,
-    resetMode: true,
-    disableEdgeVoxel: true,
-    saveAfterLoad: true
-  });
-  if (!loaded) {
-    document.getElementById('import-textarea').style.borderColor = THEME.css.errorBorder;
-    setTimeout(() => { document.getElementById('import-textarea').style.borderColor = ''; }, TIMING.feedbackMs);
-    return;
-  }
-
-  document.getElementById('modal-import').classList.remove('open');
-  drawer.classList.remove('open');
-  toggleBtn.classList.remove('active');
-});
-
-// ── Auto save / load (localStorage) ──────────────────────────────────────────
-const LS_KEY = 'voxelTool_v1';
-
-function autoSave() {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify(createSaveData()));
-  } catch(e) { /* quota超過等は無視 */ }
-}
-
-function autoLoad() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    if (!data || !Array.isArray(data.boxes) || data.boxes.length === 0) return;
-
-    loadSceneData(data);
-  } catch(e) { /* 破損データは無視 */ }
-}
-
-// ── Type grid ─────────────────────────────────────────────────────────────────
-// SVGアイコン定義（平面図）
 const TYPE_SVGS = {
   roof: `<svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
     <!-- 片流れ屋根 等角投影風 -->
@@ -1566,7 +1237,7 @@ resize();
   renderer.render(scene,camera);
 })();
 
-setActiveColor(activeColor);
+colorUI.setActiveColor(activeColor);
 buildTypeGrid();
 updatePreview();
 
@@ -1631,4 +1302,4 @@ document.getElementById('btn-roof-gable').addEventListener('click', () => {
   updatePreview();
 });
 
-autoLoad();
+persistenceApi.autoLoad();
