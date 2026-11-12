@@ -29,7 +29,7 @@ function confirmEdit() {
   refreshDropdown();
   autoSave();
   enterNormalMode();
-  dom.boxSelect.value = savedIdx;
+  dom.boxSelect.value = String(savedIdx);
 }
 
 function deleteEditingEntry() {
@@ -53,6 +53,7 @@ function clearAll() {
   });
 }
 
+/** 配置・編集確定・派生・削除・クリア・編集対象選択のボタン処理を配線する */
 export function initActions() {
   const onPrimary = () => (state.editingIndex >= 0 ? confirmEdit() : place());
 

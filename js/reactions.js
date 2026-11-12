@@ -6,6 +6,7 @@ import { updateRoofAxisButtons } from './ui/roof-controls.js';
 import { syncTypeCards } from './ui/type-grid.js';
 
 // 「状態が変わったら何を更新するか」をここに集約する
+
 export function initReactions() {
   subscribe('wireframeMode', () => {
     applyWireframeMode(registry.entries);

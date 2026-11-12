@@ -11,11 +11,13 @@ import { applyDisplayModesToEntry } from './modes.js';
 // spec:  { type, ox,oy,oz, sx,sy,sz, color(0xRRGGBB の数値), params? }
 // entry: spec + { mesh, edgeGroup, label }
 
+/** @param {import('./types.js').BoxEntry} entry @param {number} index */
 export function formatBoxLabel(entry, index) {
   const typeLabel = getShape(entry.type).typeLabel(entry);
   return `Box ${index + 1}${typeLabel} (${entry.ox},${entry.oy},${entry.oz}) ${entry.sx}×${entry.sy}×${entry.sz}`;
 }
 
+/** @param {import('./types.js').BoxEntry} entry */
 function discardEdgeGroup(entry) {
   if (!entry.edgeGroup) return;
   scene.remove(entry.edgeGroup);
@@ -25,15 +27,18 @@ function discardEdgeGroup(entry) {
 
 class BoxRegistry {
   constructor() {
+    /** @type {import('./types.js').BoxEntry[]} */
     this._entries = [];
   }
 
   get entries() { return this._entries; } // 読み取り専用として扱うこと
   get count() { return this._entries.length; }
+  /** @param {number} index */
   get(index) { return this._entries[index]; }
 
+  /** @param {import('./types.js').ShapeSpec} spec @returns {import('./types.js').BoxEntry} */
   add(spec) {
-    const entry = { mesh: null, edgeGroup: null, label: '' };
+    const entry = /** @type {import('./types.js').BoxEntry} */ ({ mesh: null, edgeGroup: null, label: '' });
     this._assignSpec(entry, spec);
     entry.label = formatBoxLabel(entry, this._entries.length);
     entry.mesh = this._buildMesh(entry);
@@ -44,6 +49,7 @@ class BoxRegistry {
   }
 
   // 形状・位置・サイズ・タイプを差し替えてメッシュを再構築する（色は維持）
+  /** @param {number} index @param {import('./types.js').ShapeSpec} spec */
   update(index, spec) {
     const entry = this._entries[index];
     this._assignSpec(entry, { ...spec, color: entry.color });
@@ -52,6 +58,7 @@ class BoxRegistry {
     return entry;
   }
 
+  /** @param {number} index @param {number} color */
   recolor(index, color) {
     const entry = this._entries[index];
     entry.color = color;
@@ -63,11 +70,13 @@ class BoxRegistry {
     }
   }
 
+  /** @param {number} index @param {boolean} on */
   highlight(index, on) {
     const entry = this._entries[index];
     if (entry) getShape(entry.type).highlight(entry.mesh, on);
   }
 
+  /** @param {number} index */
   remove(index) {
     this._disposeEntry(this._entries[index]);
     this._entries.splice(index, 1);
@@ -85,6 +94,7 @@ class BoxRegistry {
   }
 
   // ── 内部 ──
+  /** @param {import('./types.js').BoxEntry} entry @param {import('./types.js').ShapeSpec} spec */
   _assignSpec(entry, spec) {
     const type = hasShape(spec.type) ? spec.type : SHAPE_TYPE.BOX;
     const shape = getShape(type);
@@ -95,6 +105,7 @@ class BoxRegistry {
     entry.params = shape.params ? shape.params.normalize(spec.params) : undefined;
   }
 
+  /** @param {import('./types.js').BoxEntry} entry */
   _buildMesh(entry) {
     // 確定済みなので Face Culling 等の最適化を適用（confirmed = true）
     return buildShapeMesh(entry, {
@@ -104,6 +115,7 @@ class BoxRegistry {
     });
   }
 
+  /** @param {import('./types.js').BoxEntry} entry */
   _rebuild(entry) {
     scene.remove(entry.mesh);
     disposeObject3D(entry.mesh);
@@ -113,6 +125,7 @@ class BoxRegistry {
     applyDisplayModesToEntry(entry);
   }
 
+  /** @param {import('./types.js').BoxEntry} entry */
   _disposeEntry(entry) {
     scene.remove(entry.mesh);
     disposeObject3D(entry.mesh);

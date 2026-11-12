@@ -1,6 +1,8 @@
 import { THEME, TIMING } from '../config.js';
 
 // ボタンを確認状態に変え、次のクリックで onConfirm を実行（時間切れでキャンセル）
+/** ボタンを確認状態に変え、次のクリックで onConfirm を実行（時間切れでキャンセル）
+ * @param {HTMLElement} targetBtn @param {string} message @param {() => void} onConfirm */
 export function askConfirm(targetBtn, message, onConfirm) {
   if (targetBtn.dataset.confirming === '1') return; // 既に確認中
   targetBtn.dataset.confirming = '1';

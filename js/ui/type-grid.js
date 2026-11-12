@@ -1,16 +1,19 @@
 import { dom } from '../dom.js';
+import { queryAll } from '../dom-utils.js';
 import { state } from '../state.js';
 import { registry } from '../registry.js';
 import { listShapes, getShape } from '../shapes/index.js';
 
 // タイプ選択（state.activeType の変更が reactions.js 経由で syncTypeCards / プレビューに反映される）
+/** @param {string} typeId */
 export function setActiveType(typeId) {
   state.activeType = typeId;
 }
 
 // 選択カードの強調表示と、形状専用UI（controlsId）の表示切り替え
+
 export function syncTypeCards() {
-  document.querySelectorAll('.type-card').forEach(card => {
+  queryAll('.type-card').forEach(card => {
     card.classList.toggle('selected', card.dataset.type === state.activeType);
   });
   for (const shape of listShapes()) {
@@ -21,6 +24,7 @@ export function syncTypeCards() {
 }
 
 // タイプグリッドを動的生成
+
 export function buildTypeGrid() {
   const grid = dom.typeGrid;
   grid.innerHTML = '';

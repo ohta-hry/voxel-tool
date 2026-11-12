@@ -1,10 +1,13 @@
+/** 下部パネルのタブ切替を配線する */
+import { queryAll, byId } from '../dom-utils.js';
+
 export function initTabs() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  queryAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      queryAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      queryAll('.tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById(btn.dataset.tab).classList.add('active');
+      byId(btn.dataset.tab).classList.add('active');
     });
   });
 }

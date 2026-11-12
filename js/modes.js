@@ -7,6 +7,7 @@ import { getShape, makeEdgeVoxelGroupForEntry } from './shapes/index.js';
 
 // 新規作成/再構築したエントリに、現在の表示モードを反映する
 // 辺ボクセルモードの対象外の形状（edgeVoxels なし）はモードの影響を受けない
+/** @param {import('./types.js').BoxEntry} entry */
 export function applyDisplayModesToEntry(entry) {
   const shape = getShape(entry.type);
   if (!shape.edgeVoxels) return;
@@ -17,12 +18,14 @@ export function applyDisplayModesToEntry(entry) {
   }
 }
 
+/** @param {import('./types.js').BoxEntry[]} entries */
 export function applyWireframeMode(entries) {
   for (const e of entries) {
     getShape(e.type).setVisibility(e.mesh, !state.wireframeMode, true);
   }
 }
 
+/** @param {import('./types.js').BoxEntry[]} entries */
 export function applyEdgeVoxelMode(entries) {
   for (const e of entries) {
     const shape = getShape(e.type);

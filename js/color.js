@@ -3,12 +3,15 @@ import { state } from './state.js';
 import { registry } from './registry.js';
 import { PRESET_COLORS } from './palette.js';
 import { hexToInt } from './utils.js';
+import { byId, inputById, canvasById, queryAll } from './dom-utils.js';
 
 export { PRESET_COLORS };
 
+/** 色選択UI（パレット・カスタムピッカー）を初期化する。選択色は state.activeColor に反映される
+ * @returns {{ setActiveColor: (hex: string) => void, applyColorToTarget: () => void }} */
 export function initColorUI() {
   // パレット生成
-  const palette = document.getElementById('color-palette');
+  const palette = byId('color-palette');
   PRESET_COLORS.forEach(hex => {
     const sw = document.createElement('button');
     sw.className = 'color-swatch';
@@ -21,14 +24,16 @@ export function initColorUI() {
     palette.appendChild(sw);
   });
 
+  /** @param {string} hex */
   function updateSwatchSelection(hex) {
-    document.querySelectorAll('.color-swatch').forEach(sw => {
+    queryAll('.color-swatch').forEach(sw => {
       sw.classList.toggle('selected', sw.dataset.color.toLowerCase() === hex.toLowerCase());
     });
   }
 
-  const pickerPreview = document.getElementById('color-picker-preview');
+  const pickerPreview = byId('color-picker-preview');
 
+  /** @param {string} hex  '#rgb' または '#rrggbb' */
   function setActiveColor(hex) {
     // normalize to 6-digit hex
     if (hex.length === UI.hexShortLength) hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
@@ -40,6 +45,7 @@ export function initColorUI() {
   // ── Custom Color Picker ───────────────────────────────────────────────────────
   let cpHue = 0, cpSat = 1, cpVal = 1;
 
+  /** @param {number} h @param {number} s @param {number} v @returns {[number, number, number]} */
   function hsvToRgb(h, s, v) {
     let r, g, b;
     const i = Math.floor(h * 6), f = h * 6 - i, p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
@@ -53,10 +59,13 @@ export function initColorUI() {
     }
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
   }
+  /** @param {number} r @param {number} g @param {number} b */
   function rgbToHex(r, g, b) { return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join(''); }
+  /** @param {string} hex @returns {[number, number, number]} */
   function hexToRgb(hex) {
     return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
   }
+  /** @param {number} r @param {number} g @param {number} b @returns {[number, number, number]} */
   function rgbToHsv(r, g, b) {
     r /= 255; g /= 255; b /= 255;
     const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
@@ -71,11 +80,11 @@ export function initColorUI() {
     return [h, mx === 0 ? 0 : d / mx, mx];
   }
 
-  const cpSvCanvas = document.getElementById('cp-sv-canvas');
-  const cpHueCanvas = document.getElementById('cp-hue-canvas');
-  const cpHexInput = document.getElementById('cp-hex-input');
-  const cpPreview = document.getElementById('cp-preview-swatch');
-  const modalCp = document.getElementById('modal-color-picker');
+  const cpSvCanvas = canvasById('cp-sv-canvas');
+  const cpHueCanvas = canvasById('cp-hue-canvas');
+  const cpHexInput = inputById('cp-hex-input');
+  const cpPreview = byId('cp-preview-swatch');
+  const modalCp = byId('modal-color-picker');
 
   function cpDrawSV() {
     const ctx = cpSvCanvas.getContext('2d');
@@ -124,6 +133,7 @@ export function initColorUI() {
   }
 
   // Pointer events for SV canvas
+  /** @param {PointerEvent & { touches?: TouchList }} e  （旧タッチイベント互換で touches も見る） */
   function cpSvPointer(e) {
     e.preventDefault();
     const r = cpSvCanvas.getBoundingClientRect();
@@ -137,6 +147,7 @@ export function initColorUI() {
   cpSvCanvas.addEventListener('pointermove', e => { if (e.buttons) cpSvPointer(e); });
 
   // Pointer events for Hue canvas
+  /** @param {PointerEvent & { touches?: TouchList }} e */
   function cpHuePointer(e) {
     e.preventDefault();
     const r = cpHueCanvas.getBoundingClientRect();

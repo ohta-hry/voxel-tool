@@ -3,15 +3,19 @@ import { ROOF_AXIS, ROOF_AXIS_CYCLE } from '../constants.js';
 import { dom } from '../dom.js';
 import { state } from '../state.js';
 
+/** @param {string} axis */
 const isXAxis = axis => axis === ROOF_AXIS.PLUS_X || axis === ROOF_AXIS.MINUS_X;
+/** @param {string} axis */
 const isZAxis = axis => axis === ROOF_AXIS.PLUS_Z || axis === ROOF_AXIS.MINUS_Z;
 
+/** @param {HTMLElement} btn @param {boolean} active */
 function paintButton(btn, active) {
   btn.style.background = active ? THEME.css.primaryBg : THEME.css.panel;
   btn.style.borderColor = active ? THEME.css.primaryBorder : THEME.css.panelBorder;
   btn.style.color = active ? THEME.css.primaryText : THEME.css.mutedText;
 }
 
+/** 勾配軸ボタンの表示を state.roofAxis / roofGable に合わせる */
 export function updateRoofAxisButtons() {
   const isX = isXAxis(state.roofAxis);
   const isZ = isZAxis(state.roofAxis);

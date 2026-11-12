@@ -2,6 +2,7 @@ import { dom } from '../dom.js';
 import { state, subscribe } from '../state.js';
 
 // チェックボックス ⇔ state の同期のみ担当（実際の表示切替は reactions.js）
+
 export function initModeToggles() {
   dom.chkWireframe.addEventListener('change', () => {
     state.wireframeMode = dom.chkWireframe.checked;

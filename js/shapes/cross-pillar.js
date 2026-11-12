@@ -21,6 +21,7 @@ function makeCulledCellGeometry(cellSet, lx, lz, sy, confirmed) {
 }
 
 // 十字柱: 5×5ベースで四隅1マス欠けの柱
+/** @type {import('../types.js').ShapeDefinition} */
 export const crossPillarShape = {
   id: SHAPE_TYPE.CROSS_PILLAR,
   label: '十字柱',

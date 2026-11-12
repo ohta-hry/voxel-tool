@@ -7,6 +7,9 @@ import { cellKey } from './footprint.js';
 // 凸コーナーの判定:
 //   格子点(px, pz)を共有する4セル領域のうち存在するセル数が奇数 → 折れ点
 //   偶数（0 / 2 / 4）→ 真っ直ぐな辺 or 内部点
+/** @param {import('../types.js').Cell2[]} cells @param {Set<string>} cellSet
+ * @param {number} ox @param {number} oy @param {number} oz @param {number} sy
+ * @returns {number[]} 線分端点を平坦に並べた配列（6要素=1線分） */
 export function computeCrossPillarOutlinePoints(cells, cellSet, ox, oy, oz, sy) {
   const pts = [];
   const addSeg = (ax, ay, az, bx, by, bz) => {

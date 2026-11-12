@@ -5,6 +5,7 @@ import { createEdgeMaterial } from './materials.js';
 import { dom } from './dom.js';
 
 // ── Renderer / Scene / Camera ────────────────────────────────────────────────
+/** WebGL レンダラ */
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setClearColor(THEME.color.background);
@@ -22,7 +23,7 @@ controls.maxDistance = SCENE.controls.maxDistance;
 // ── Lights ───────────────────────────────────────────────────────────────────
 scene.add(new THREE.AmbientLight(THEME.color.ambientLight, SCENE.ambientLightIntensity));
 const dirLight = new THREE.DirectionalLight(THEME.color.white, SCENE.directionalLight.intensity);
-dirLight.position.set(...SCENE.directionalLight.position);
+dirLight.position.set(.../** @type {[number, number, number]} */ (SCENE.directionalLight.position));
 dirLight.castShadow = true;
 scene.add(dirLight);
 // カメラ追従ライト（ズームアウト時も明るさを保つ）
@@ -44,24 +45,29 @@ let boundaryLines = null;
 const axisGroup = new THREE.Group();
 scene.add(axisGroup);
 
+/** @param {number} color */
 function lineMaterial(color) {
   return createEdgeMaterial(color, { transparent: false, opacity: 1 });
 }
 
 function clearAxisGroup() {
-  for (const child of axisGroup.children) {
+  for (const object of axisGroup.children) {
+    const child = /** @type {THREE.Line} */ (object);
     child.geometry.dispose();
-    child.material.dispose();
+    /** @type {THREE.Material} */ (child.material).dispose();
   }
   axisGroup.clear();
 }
 
+/** @param {number[]} a @param {number[]} b @param {number} color */
 function addAxisLine(a, b, color) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute([...a, ...b], VOXEL.bufferPositionItemSize));
   axisGroup.add(new THREE.Line(g, lineMaterial(color)));
 }
 
+/** グリッド/境界/軸線を作り直し、カメラを初期位置へ戻す
+ * @param {number} cx @param {number} cz  キャンバスサイズ(X, Z) */
 export function buildGrid(cx, cz) {
   if (gridLines)     { scene.remove(gridLines);     gridLines.geometry.dispose();     gridLines.material.dispose(); }
   if (boundaryLines) { scene.remove(boundaryLines); boundaryLines.geometry.dispose(); boundaryLines.material.dispose(); }
@@ -107,11 +113,13 @@ function resize() {
   camera.updateProjectionMatrix();
 }
 
+/** コンテナのリサイズに追従させる */
 export function setupResize() {
   new ResizeObserver(resize).observe(dom.container);
   resize();
 }
 
+/** 描画ループを開始する */
 export function startRenderLoop() {
   (function animate() {
     requestAnimationFrame(animate);

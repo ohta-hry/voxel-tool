@@ -4,6 +4,8 @@ import { cellKey } from './footprint.js';
 // 1×sy×1 のセルについて、隣接セルが存在しない方向の面だけの頂点データを返す
 // （内部接触面を省いて描画負荷を削減）。Y方向（上下面）は常に残す。
 // 戻り値: { positions, normals, uvs, indices }（いずれも平坦な数値配列）
+/** @param {Set<string>} cellSet @param {number} lx @param {number} lz @param {number} sy
+ * @returns {import('../types.js').CulledCellData} */
 export function computeCulledCellData(cellSet, lx, lz, sy) {
   const hasRight = cellSet.has(cellKey(lx + 1, lz)); // +X
   const hasLeft  = cellSet.has(cellKey(lx - 1, lz)); // -X

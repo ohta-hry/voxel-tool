@@ -7,6 +7,7 @@ import { TYPE_SVGS } from '../type-icons.js';
 import { setCellGroupVisibility, highlightCellGroup, setCellGroupColor } from './cell-group.js';
 
 // 屋根（DDA平面）。形状固有パラメータ params = { axis: '+x'|'-x'|'+z'|'-z', gable: boolean }
+/** @type {import('../types.js').ShapeDefinition} */
 export const roofShape = {
   id: SHAPE_TYPE.ROOF,
   label: '屋根',

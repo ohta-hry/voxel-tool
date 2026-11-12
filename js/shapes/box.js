@@ -6,6 +6,7 @@ import { computeEdgeVoxels } from '../logic/edge-voxels.js';
 import { TYPE_SVGS } from '../type-icons.js';
 
 // 直方体
+/** @type {import('../types.js').ShapeDefinition} */
 export const boxShape = {
   id: SHAPE_TYPE.BOX,
   label: '直方体',
@@ -32,15 +33,16 @@ export const boxShape = {
     if (mesh.children[0]) mesh.children[0].visible = edgeVisible;
   },
 
-  highlight(mesh, on) {
-    const edgeChild = mesh.children[0];
+  highlight(obj, on) {
+    const mesh = /** @type {THREE.Mesh} */ (obj);
+    const edgeChild = /** @type {THREE.LineSegments} */ (mesh.children[0]);
     if (!edgeChild) return;
     edgeChild.material = on ? SELECT_EMAT : createEdgeMaterial();
-    mesh.material.opacity = on ? THEME.opacity.selected : THEME.opacity.solid;
+    /** @type {THREE.Material} */ (mesh.material).opacity = on ? THEME.opacity.selected : THEME.opacity.solid;
   },
 
-  setColor(mesh, color) {
-    mesh.material.color.setHex(color);
+  setColor(obj, color) {
+    /** @type {THREE.MeshLambertMaterial} */ (/** @type {THREE.Mesh} */ (obj).material).color.setHex(color);
   },
 
   // 辺ボクセルモードの対象（無い形状はモードの影響を受けない）

@@ -3,10 +3,12 @@ import { dom } from '../dom.js';
 import { state } from '../state.js';
 import { buildGrid } from '../scene.js';
 
+/** 設定ドロワーを閉じる */
 export function closeDrawer() {
   dom.drawer.classList.remove('open');
   dom.toggleBtn.classList.remove('active');
 }
+
 
 export function initDrawer() {
   dom.toggleBtn.addEventListener('click', () => {
@@ -17,8 +19,8 @@ export function initDrawer() {
   dom.btnApplySettings.addEventListener('click', () => {
     state.canvasX = Math.max(UI.minSize, parseInt(dom.canvasXInput.value) || UI.defaultCanvasSize);
     state.canvasZ = Math.max(UI.minSize, parseInt(dom.canvasZInput.value) || UI.defaultCanvasSize);
-    dom.canvasXInput.value = state.canvasX;
-    dom.canvasZInput.value = state.canvasZ;
+    dom.canvasXInput.value = String(state.canvasX);
+    dom.canvasZInput.value = String(state.canvasZ);
     buildGrid(state.canvasX, state.canvasZ);
     closeDrawer();
   });

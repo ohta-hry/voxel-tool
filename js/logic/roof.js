@@ -1,12 +1,16 @@
 import { VOXEL } from '../config.js';
 import { ROOF_AXIS } from '../constants.js';
 
+/** @type {Set<string>} */
 const VALID_AXES = new Set(Object.values(ROOF_AXIS));
 
 // 'x' のような符号なし旧データを '+x' に補正する。不正値は fallback
+/** @param {string} [value]
+ * @param {import('../types.js').RoofAxis} [fallback]
+ * @returns {import('../types.js').RoofAxis} */
 export function normalizeRoofAxis(value, fallback = ROOF_AXIS.PLUS_X) {
   if (!value) return fallback;
-  if (VALID_AXES.has(value)) return value;
+  if (VALID_AXES.has(value)) return /** @type {import('../types.js').RoofAxis} */ (value);
   const normalized = '+' + value;
   return (normalized === ROOF_AXIS.PLUS_X || normalized === ROOF_AXIS.PLUS_Z) ? normalized : fallback;
 }
@@ -15,7 +19,11 @@ export function normalizeRoofAxis(value, fallback = ROOF_AXIS.PLUS_X) {
 // axis: '+x'|'-x'|'+z'|'-z'
 // +x: ステップ0(x=0)が低く, ステップsxが高い → 低→高へ
 // -x: ステップ0(x=0)が高く, ステップsxが低い → 高→低へ（reversed）
+/** @param {number} sx @param {number} sy @param {number} sz
+ * @param {string} axis  '+x'|'-x'|'+z'|'-z'
+ * @returns {import('../types.js').VoxelXYZ[]} */
 export function computeRoofVoxels(sx, sy, sz, axis) {
+  /** @type {import('../types.js').VoxelXYZ[]} */
   const voxels = [];
   const baseAxis = axis.slice(-1); // 'x' or 'z'
   const reversed = axis[0] === '-';
@@ -40,13 +48,19 @@ export function computeRoofVoxels(sx, sy, sz, axis) {
 }
 
 // 両屋根用: 両サイドのvoxelを結合して返す（重複座標はSetで除去）
+/** @param {number} sx @param {number} sy @param {number} sz
+ * @param {string} axis  '+x'|'-x'|'+z'|'-z'
+ * @returns {import('../types.js').VoxelXYZ[]} */
 export function computeGableVoxels(sx, sy, sz, axis) {
   const baseAxis = axis.slice(-1);
   const steps = (baseAxis === 'x') ? sx : sz;
   const half = Math.ceil(steps / 2);
 
+  /** @type {Set<string>} */
   const seen = new Set();
+  /** @type {import('../types.js').VoxelXYZ[]} */
   const voxels = [];
+  /** @param {import('../types.js').VoxelXYZ[]} list */
   const addVoxels = (list) => {
     for (const v of list) {
       const k = `${v.lx},${v.ly},${v.lz}`;

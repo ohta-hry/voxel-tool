@@ -9,9 +9,12 @@ import { getShape, buildShapeMesh, readParamsFromState } from './shapes/index.js
 import { readShapeSpec } from './form.js';
 import { hexToInt } from './utils.js';
 
+/** @type {import('three').Object3D | null} */
 let previewMesh = null;
+/** @type {string | null} */
 let previewType = null;
 
+/** フォームの値と選択中の形状でプレビューを作り直す */
 export function updatePreview() {
   if (previewMesh) {
     scene.remove(previewMesh);
@@ -37,6 +40,7 @@ export function updatePreview() {
 }
 
 // ワイヤーフレームモード切替時にプレビューの表示だけ更新する（面を隠してエッジのみ表示）
+
 export function refreshPreviewVisibility() {
   if (!previewMesh) return;
   getShape(previewType).setVisibility(previewMesh, !state.wireframeMode, true);

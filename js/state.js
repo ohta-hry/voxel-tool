@@ -6,6 +6,7 @@ import { SHAPE_TYPE, ROOF_AXIS } from './constants.js';
 // ・state.xxx = value で書き込むと、値が変わったときだけ購読者に通知される
 // ・subscribe(keys, fn): fn(changedKeys) が呼ばれる。戻り値は購読解除関数
 // ・batch(fn): fn 内の変更はまとめて1回だけ通知（同じ fn は1回だけ呼ばれる）
+/** @type {import('./types.js').AppState} */
 const data = {
   canvasX: UI.defaultCanvasSize,
   canvasZ: UI.defaultCanvasSize,
@@ -23,11 +24,18 @@ const data = {
   editingIndex: -1, // -1 = 通常モード, >=0 = そのボックスを編集中
 };
 
-const listeners = new Map(); // key -> Set<fn>
+/** @typedef {keyof import('./types.js').AppState} StateKey */
+/** @typedef {(changed: StateKey[]) => void} StateListener */
+
+/** @type {Map<StateKey, Set<StateListener>>} */
+const listeners = new Map();
+/** @type {Set<StateKey>} */
 const pendingKeys = new Set();
 let batchDepth = 0;
 
+/** @param {StateKey[]} keys */
 function notify(keys) {
+  /** @type {Map<StateListener, StateKey[]>} */
   const calls = new Map(); // fn -> 該当キー
   for (const key of keys) {
     for (const fn of listeners.get(key) ?? []) {
@@ -38,17 +46,25 @@ function notify(keys) {
   for (const [fn, changed] of calls) fn(changed);
 }
 
+/** 共有状態。書き込みは変更検知付き（読み取りは通常のプロパティアクセス）
+ * @type {import('./types.js').AppState} */
 export const state = new Proxy(data, {
   set(target, key, value) {
-    if (!(key in target)) throw new Error(`state: 未定義のキー "${String(key)}"`);
-    if (target[key] === value) return true;
-    target[key] = value;
-    if (batchDepth > 0) pendingKeys.add(key);
-    else notify([key]);
+    const k = /** @type {StateKey} */ (key);
+    if (!(k in target)) throw new Error(`state: 未定義のキー "${String(key)}"`);
+    if (target[k] === value) return true;
+    /** @type {any} */ (target)[k] = value;
+    if (batchDepth > 0) pendingKeys.add(k);
+    else notify([k]);
     return true;
   },
 });
 
+/**
+ * @param {StateKey | StateKey[]} keys
+ * @param {StateListener} fn
+ * @returns {() => void} 購読解除関数
+ */
 export function subscribe(keys, fn) {
   const list = Array.isArray(keys) ? keys : [keys];
   for (const key of list) {
@@ -58,6 +74,7 @@ export function subscribe(keys, fn) {
   return () => list.forEach(key => listeners.get(key)?.delete(fn));
 }
 
+/** @param {() => void} fn */
 export function batch(fn) {
   batchDepth++;
   try {

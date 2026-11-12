@@ -2,7 +2,10 @@ import { VOXEL } from '../config.js';
 
 // 直方体の「辺」に属するボクセル座標 [lx, ly, lz] を列挙する
 // 辺の定義: 3軸のうち2軸以上が端（0 or max-1）
+/** @param {number} sx @param {number} sy @param {number} sz
+ * @returns {import('../types.js').Voxel3[]} */
 export function computeEdgeVoxels(sx, sy, sz) {
+  /** @type {import('../types.js').Voxel3[]} */
   const voxels = [];
   const isEdgeCoord = (v, max) => v === 0 || v === max - 1;
 

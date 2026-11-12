@@ -1,5 +1,6 @@
 import { UI } from '../config.js';
 import { dom } from '../dom.js';
+import { queryAll } from '../dom-utils.js';
 import { state, batch } from '../state.js';
 import { registry } from '../registry.js';
 import { syncStateFromEntry } from '../shapes/index.js';
@@ -9,8 +10,9 @@ import { resetBoxSelect } from './dropdown.js';
 import { setActiveType } from './type-grid.js';
 import { updateRoofAxisButtons } from './roof-controls.js';
 
+/** @param {boolean} on */
 function setEditingHighlight(on) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.toggle('editing', on));
+  queryAll('.tab-content').forEach(t => t.classList.toggle('editing', on));
 }
 
 function setButtonsNormal() {
@@ -40,6 +42,7 @@ function leaveEditState() {
   setEditingHighlight(false);
 }
 
+/** 通常（新規配置）モードへ戻し、フォームを初期値にする */
 export function enterNormalMode() {
   leaveEditState();
   const d = UI.defaultBox;
@@ -48,6 +51,7 @@ export function enterNormalMode() {
 }
 
 // 派生作成: 編集モードを終了し、スピナー値は維持したまま新規配置状態にする
+
 export function startDerive() {
   const { ox, oy, oz, sx, sy, sz } = getValues();
   leaveEditState();
@@ -56,6 +60,7 @@ export function startDerive() {
   updatePreview();
 }
 
+/** @param {number} idx 編集するボックスの添字 */
 export function enterEditMode(idx) {
   if (state.editingIndex >= 0) registry.highlight(state.editingIndex, false);
   state.editingIndex = idx;

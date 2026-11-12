@@ -9,11 +9,14 @@ import { updatePreview } from './preview.js';
 import { refreshDropdown } from './ui/dropdown.js';
 import { closeDrawer } from './ui/drawer.js';
 import { enterNormalMode } from './ui/edit-mode.js';
+import { byId, textareaById } from './dom-utils.js';
 
 // 依存はすべて直接 import（DI引数なし）
+/** 保存/読込（localStorage 自動保存・エクスポート/インポートモーダル）を初期化する */
 export function initPersistence() {
-  const $ = id => document.getElementById(id);
+  const $ = byId;
 
+  /** @returns {import('./types.js').SaveData} */
   function createSaveData() {
     return {
       canvasX: state.canvasX, canvasZ: state.canvasZ,
@@ -28,6 +31,7 @@ export function initPersistence() {
     };
   }
 
+  /** @param {import('./types.js').SavedBox} b */
   function restoreBoxFromData(b) {
     const type = hasShape(b.type) ? b.type : SHAPE_TYPE.BOX;
     registry.add({
@@ -39,6 +43,9 @@ export function initPersistence() {
     });
   }
 
+  /** @param {import('./types.js').SaveData|null} data
+   * @param {{ clearExisting?: boolean, resetMode?: boolean, disableEdgeVoxel?: boolean, saveAfterLoad?: boolean }} [options]
+   * @returns {boolean} 読み込めたか */
   function loadSceneData(data, { clearExisting = false, resetMode = false, disableEdgeVoxel = false, saveAfterLoad = false } = {}) {
     if (!data || !Array.isArray(data.boxes)) return false;
 
@@ -49,8 +56,8 @@ export function initPersistence() {
 
     state.canvasX = data.canvasX || UI.defaultCanvasSize;
     state.canvasZ = data.canvasZ || UI.defaultCanvasSize;
-    dom.canvasXInput.value = state.canvasX;
-    dom.canvasZInput.value = state.canvasZ;
+    dom.canvasXInput.value = String(state.canvasX);
+    dom.canvasZInput.value = String(state.canvasZ);
     buildGrid(state.canvasX, state.canvasZ);
 
     for (const b of data.boxes) restoreBoxFromData(b);
@@ -66,6 +73,7 @@ export function initPersistence() {
     return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   }
 
+  /** @param {string} code @returns {import('./types.js').SaveData|null} */
   function deserializeSave(code) {
     try {
       return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
@@ -77,13 +85,13 @@ export function initPersistence() {
   // Open export modal
   $('btn-export-save').addEventListener('click', () => {
     const code = serializeSave();
-    $('export-textarea').value = code;
+    textareaById('export-textarea').value = code;
     $('modal-export').classList.add('open');
   });
 
   // Copy code
   $('btn-export-copy').addEventListener('click', () => {
-    const ta = $('export-textarea');
+    const ta = textareaById('export-textarea');
     ta.select();
     navigator.clipboard.writeText(ta.value).catch(() => {
       document.execCommand('copy');
@@ -98,7 +106,7 @@ export function initPersistence() {
 
   // Open import modal
   $('btn-import-save').addEventListener('click', () => {
-    $('import-textarea').value = '';
+    textareaById('import-textarea').value = '';
     $('modal-import').classList.add('open');
   });
 
@@ -107,12 +115,12 @@ export function initPersistence() {
   });
 
   function flashImportError() {
-    $('import-textarea').style.borderColor = THEME.css.errorBorder;
-    setTimeout(() => { $('import-textarea').style.borderColor = ''; }, TIMING.feedbackMs);
+    textareaById('import-textarea').style.borderColor = THEME.css.errorBorder;
+    setTimeout(() => { textareaById('import-textarea').style.borderColor = ''; }, TIMING.feedbackMs);
   }
 
   $('btn-import-load').addEventListener('click', () => {
-    const data = deserializeSave($('import-textarea').value);
+    const data = deserializeSave(textareaById('import-textarea').value);
     if (!data) { flashImportError(); return; }
 
     const loaded = loadSceneData(data, {
