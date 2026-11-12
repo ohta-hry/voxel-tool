@@ -1,176 +1,166 @@
-export function initPersistence(context) {
-  const { UI, THEME, TIMING, scene, placedBoxes, SHAPE_DEFS, chkEdgeVoxel, chkEdgeIcon, drawer, toggleBtn, removeAllEntriesFromScene, enterNormalMode, buildGrid, updateRoofAxisButtons, createSolidMaterial, createEdgeMaterial, makeShapeMesh, createEntry, refreshDropdown, updatePreview } = context;
-  const { state } = context;
+import { UI, THEME, TIMING } from './config.js';
+import { SHAPE_TYPE, ROOF_AXIS } from './constants.js';
+import { dom } from './dom.js';
+import { state } from './state.js';
+import { registry } from './registry.js';
+import { SHAPE_DEFS, getEntryType } from './shape-defs.js';
+import { buildGrid } from './scene.js';
+import { updatePreview } from './preview.js';
+import { refreshDropdown } from './ui/dropdown.js';
+import { closeDrawer } from './ui/drawer.js';
+import { enterNormalMode } from './ui/edit-mode.js';
 
-function createSaveData() {
-  return {
-    canvasX: state.canvasX, canvasZ: state.canvasZ,
-    boxes: placedBoxes.map(e => ({
-      ox:e.ox, oy:e.oy, oz:e.oz,
-      sx:e.sx, sy:e.sy, sz:e.sz,
-      color:e.color, label:e.label,
-      type: e.type || 'box',
-      // roof専用: DDA勾配軸 (+x/-x/+z/-z)
-      roofAxis: (e.type === 'roof') ? (e.roofAxis || '+x') : undefined,
-      roofGable: (e.type === 'roof') ? (!!e.roofGable) : undefined
-    }))
-  };
-}
+// 依存はすべて直接 import（DI引数なし）
+export function initPersistence() {
+  const $ = id => document.getElementById(id);
 
-function normalizeRoofAxisValue(value, fallback = '+x') {
-  if (!value) return fallback;
-  if (value === '+x' || value === '-x' || value === '+z' || value === '-z') return value;
-  const normalized = '+' + value;
-  return (normalized === '+x' || normalized === '+z') ? normalized : fallback;
-}
-
-function restoreBoxFromData(b) {
-  const btype = (b.type && SHAPE_DEFS[b.type]) ? b.type : 'box';
-  const savedRoofAxis = btype === 'roof' ? normalizeRoofAxisValue(b.roofAxis, state.roofAxis) : undefined;
-  const savedRoofGable = btype === 'roof' ? !!b.roofGable : undefined;
-
-  if (btype === 'roof') {
-    state.roofAxis = savedRoofAxis;
-    state.roofGable = savedRoofGable;
+  function createSaveData() {
+    return {
+      canvasX: state.canvasX, canvasZ: state.canvasZ,
+      boxes: registry.entries.map(e => {
+        const type = getEntryType(e);
+        const isRoof = type === SHAPE_TYPE.ROOF;
+        return {
+          ox: e.ox, oy: e.oy, oz: e.oz,
+          sx: e.sx, sy: e.sy, sz: e.sz,
+          color: e.color, label: e.label,
+          type,
+          // roof専用: DDA勾配軸 (+x/-x/+z/-z)
+          roofAxis: isRoof ? (e.roofAxis || ROOF_AXIS.PLUS_X) : undefined,
+          roofGable: isRoof ? !!e.roofGable : undefined,
+        };
+      }),
+    };
   }
 
-  const mat = createSolidMaterial(b.color);
-  const edgeMat = createEdgeMaterial();
-  const mesh = makeShapeMesh(btype, b.ox,b.oy,b.oz,b.sx,b.sy,b.sz,mat,edgeMat, true);
-  scene.add(mesh);
-  const entry = createEntry({
-    mesh,
-    ox:b.ox, oy:b.oy, oz:b.oz,
-    sx:b.sx, sy:b.sy, sz:b.sz,
-    color:b.color,
-    type:btype,
-    roofAxis:savedRoofAxis,
-    roofGable:savedRoofGable,
-    edgeGroup:null
+  // 'x' のような旧形式は '+x' に補正。不正値は fallback
+  function normalizeRoofAxisValue(value, fallback = ROOF_AXIS.PLUS_X) {
+    if (!value) return fallback;
+    if (Object.values(ROOF_AXIS).includes(value)) return value;
+    const normalized = '+' + value;
+    return (normalized === ROOF_AXIS.PLUS_X || normalized === ROOF_AXIS.PLUS_Z) ? normalized : fallback;
+  }
+
+  function restoreBoxFromData(b) {
+    const type = (b.type && SHAPE_DEFS[b.type]) ? b.type : SHAPE_TYPE.BOX;
+    const isRoof = type === SHAPE_TYPE.ROOF;
+    registry.add({
+      type,
+      ox: b.ox, oy: b.oy, oz: b.oz,
+      sx: b.sx, sy: b.sy, sz: b.sz,
+      color: b.color,
+      roofAxis: isRoof ? normalizeRoofAxisValue(b.roofAxis) : undefined,
+      roofGable: isRoof ? !!b.roofGable : undefined,
+    });
+  }
+
+  function loadSceneData(data, { clearExisting = false, resetMode = false, disableEdgeVoxel = false, saveAfterLoad = false } = {}) {
+    if (!data || !Array.isArray(data.boxes)) return false;
+
+    if (disableEdgeVoxel) state.edgeVoxelMode = false; // チェックボックス表示は mode-toggles が同期
+
+    if (clearExisting) registry.clear();
+    if (resetMode) enterNormalMode();
+
+    state.canvasX = data.canvasX || UI.defaultCanvasSize;
+    state.canvasZ = data.canvasZ || UI.defaultCanvasSize;
+    dom.canvasXInput.value = state.canvasX;
+    dom.canvasZInput.value = state.canvasZ;
+    buildGrid(state.canvasX, state.canvasZ);
+
+    for (const b of data.boxes) restoreBoxFromData(b);
+
+    refreshDropdown();
+    updatePreview();
+    if (saveAfterLoad) autoSave();
+    return true;
+  }
+
+  function serializeSave() {
+    const data = createSaveData();
+    return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  }
+
+  function deserializeSave(code) {
+    try {
+      return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Open export modal
+  $('btn-export-save').addEventListener('click', () => {
+    const code = serializeSave();
+    $('export-textarea').value = code;
+    $('modal-export').classList.add('open');
   });
-  placedBoxes.push(entry);
-}
 
-function loadSceneData(data, { clearExisting=false, resetMode=false, disableEdgeVoxel=false, saveAfterLoad=false } = {}) {
-  if (!data || !Array.isArray(data.boxes)) return false;
-
-  if (disableEdgeVoxel && state.edgeVoxelMode) {
-    state.edgeVoxelMode = false;
-    chkEdgeVoxel.checked = false;
-    chkEdgeIcon.textContent = '';
-  }
-
-  if (clearExisting) removeAllEntriesFromScene();
-  if (resetMode) enterNormalMode();
-
-  state.canvasX = data.canvasX || UI.defaultCanvasSize;
-  state.canvasZ = data.canvasZ || UI.defaultCanvasSize;
-  document.getElementById('canvas-x').value = state.canvasX;
-  document.getElementById('canvas-z').value = state.canvasZ;
-  buildGrid(state.canvasX, state.canvasZ);
-
-  for (const b of data.boxes) restoreBoxFromData(b);
-
-  refreshDropdown();
-  if (typeof updateRoofAxisButtons === 'function') updateRoofAxisButtons();
-  updatePreview();
-  if (saveAfterLoad) autoSave();
-  return true;
-}
-
-function serializeSave() {
-  const data = createSaveData();
-  return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-}
-
-function deserializeSave(code) {
-  try {
-    return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-  } catch(e) {
-    return null;
-  }
-}
-
-// Open export modal
-document.getElementById('btn-export-save').addEventListener('click', () => {
-  const code = serializeSave();
-  document.getElementById('export-textarea').value = code;
-  document.getElementById('modal-export').classList.add('open');
-});
-
-// Copy code
-document.getElementById('btn-export-copy').addEventListener('click', () => {
-  const ta = document.getElementById('export-textarea');
-  ta.select();
-  navigator.clipboard.writeText(ta.value).catch(() => {
-    document.execCommand('copy');
+  // Copy code
+  $('btn-export-copy').addEventListener('click', () => {
+    const ta = $('export-textarea');
+    ta.select();
+    navigator.clipboard.writeText(ta.value).catch(() => {
+      document.execCommand('copy');
+    });
+    $('btn-export-copy').textContent = '✓ コピー完了';
+    setTimeout(() => { $('btn-export-copy').textContent = '📋 コピー'; }, TIMING.feedbackMs);
   });
-  document.getElementById('btn-export-copy').textContent = '✓ コピー完了';
-  setTimeout(() => { document.getElementById('btn-export-copy').textContent = '📋 コピー'; }, TIMING.feedbackMs);
-});
 
-document.getElementById('btn-export-close').addEventListener('click', () => {
-  document.getElementById('modal-export').classList.remove('open');
-});
-
-// Open import modal
-document.getElementById('btn-import-save').addEventListener('click', () => {
-  document.getElementById('import-textarea').value = '';
-  document.getElementById('modal-import').classList.add('open');
-});
-
-document.getElementById('btn-import-cancel').addEventListener('click', () => {
-  document.getElementById('modal-import').classList.remove('open');
-});
-
-document.getElementById('btn-import-load').addEventListener('click', () => {
-  const code = document.getElementById('import-textarea').value;
-  const data = deserializeSave(code);
-  if (!data) {
-    document.getElementById('import-textarea').style.borderColor = THEME.css.errorBorder;
-    setTimeout(() => { document.getElementById('import-textarea').style.borderColor = ''; }, TIMING.feedbackMs);
-    return;
-  }
-
-  const loaded = loadSceneData(data, {
-    clearExisting: true,
-    resetMode: true,
-    disableEdgeVoxel: true,
-    saveAfterLoad: true
+  $('btn-export-close').addEventListener('click', () => {
+    $('modal-export').classList.remove('open');
   });
-  if (!loaded) {
-    document.getElementById('import-textarea').style.borderColor = THEME.css.errorBorder;
-    setTimeout(() => { document.getElementById('import-textarea').style.borderColor = ''; }, TIMING.feedbackMs);
-    return;
+
+  // Open import modal
+  $('btn-import-save').addEventListener('click', () => {
+    $('import-textarea').value = '';
+    $('modal-import').classList.add('open');
+  });
+
+  $('btn-import-cancel').addEventListener('click', () => {
+    $('modal-import').classList.remove('open');
+  });
+
+  function flashImportError() {
+    $('import-textarea').style.borderColor = THEME.css.errorBorder;
+    setTimeout(() => { $('import-textarea').style.borderColor = ''; }, TIMING.feedbackMs);
   }
 
-  document.getElementById('modal-import').classList.remove('open');
-  drawer.classList.remove('open');
-  toggleBtn.classList.remove('active');
-});
+  $('btn-import-load').addEventListener('click', () => {
+    const data = deserializeSave($('import-textarea').value);
+    if (!data) { flashImportError(); return; }
 
-// ── Auto save / load (localStorage) ──────────────────────────────────────────
-const LS_KEY = 'voxelTool_v1';
+    const loaded = loadSceneData(data, {
+      clearExisting: true,
+      resetMode: true,
+      disableEdgeVoxel: true,
+      saveAfterLoad: true,
+    });
+    if (!loaded) { flashImportError(); return; }
 
-function autoSave() {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify(createSaveData()));
-  } catch(e) { /* quota超過等は無視 */ }
-}
+    $('modal-import').classList.remove('open');
+    closeDrawer();
+  });
 
-function autoLoad() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    if (!data || !Array.isArray(data.boxes) || data.boxes.length === 0) return;
+  // ── Auto save / load (localStorage) ──────────────────────────────────────────
+  const LS_KEY = 'voxelTool_v1';
 
-    loadSceneData(data);
-  } catch(e) { /* 破損データは無視 */ }
-}
+  function autoSave() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(createSaveData()));
+    } catch (e) { /* quota超過等は無視 */ }
+  }
 
-// ── Type grid ─────────────────────────────────────────────────────────────────
-// SVGアイコン定義（平面図）
+  function autoLoad() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (!data || !Array.isArray(data.boxes) || data.boxes.length === 0) return;
+
+      loadSceneData(data);
+    } catch (e) { /* 破損データは無視 */ }
+  }
 
   return { autoSave, autoLoad, loadSceneData, createSaveData, serializeSave, deserializeSave };
 }

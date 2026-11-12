@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { THEME, VOXEL } from './config.js';
-import { SHAPE_TYPE } from './constants.js';
+import { SHAPE_TYPE, ROOF_AXIS } from './constants.js';
 import { state } from './state.js';
 import { createSolidMaterial, createEdgeMaterial, UNIT_BOX_GEO, UNIT_EDGE_GEO } from './materials.js';
 import { crossPillarFootprint, toCellSet, computeCrossPillarEdgeVoxels } from './logic/footprint.js';
@@ -8,6 +8,8 @@ import { computeRoofVoxels, computeGableVoxels } from './logic/roof.js';
 import { computeEdgeVoxels } from './logic/edge-voxels.js';
 import { computeCulledCellData } from './logic/culled-cell.js';
 import { computeCrossPillarOutlinePoints } from './logic/outline.js';
+
+const DEFAULT_ROOF = Object.freeze({ axis: ROOF_AXIS.PLUS_X, gable: false });
 
 // ── 直方体 ───────────────────────────────────────────────────────────────────
 function makeBoxMesh(ox, oy, oz, sx, sy, sz, mat, edgeMat) {
@@ -80,11 +82,11 @@ function makeCrossPillarMesh(ox, oy, oz, sx, sy, sz, mat, edgeMat, isConfirmed =
 }
 
 // ── 屋根 ─────────────────────────────────────────────────────────────────────
-// 注: 勾配軸・両屋根は state.roofAxis / state.roofGable を参照する（段階3で引数化予定）
-function makeRoofMesh(ox, oy, oz, sx, sy, sz, mat, edgeMat) {
-  const voxels = state.roofGable
-    ? computeGableVoxels(sx, sy, sz, state.roofAxis)
-    : computeRoofVoxels(sx, sy, sz, state.roofAxis);
+// roof: { axis: '+x'|'-x'|'+z'|'-z', gable: boolean }
+function makeRoofMesh(ox, oy, oz, sx, sy, sz, mat, edgeMat, roof) {
+  const voxels = roof.gable
+    ? computeGableVoxels(sx, sy, sz, roof.axis)
+    : computeRoofVoxels(sx, sy, sz, roof.axis);
 
   const group = new THREE.Group();
   group.userData.isRoof = true;
@@ -104,9 +106,10 @@ function makeRoofMesh(ox, oy, oz, sx, sy, sz, mat, edgeMat) {
   return group;
 }
 
-export function makeShapeMesh(type, ox, oy, oz, sx, sy, sz, mat, edgeMat, isConfirmed = false) {
+// roof は屋根のときだけ使われる { axis, gable }
+export function makeShapeMesh(type, ox, oy, oz, sx, sy, sz, mat, edgeMat, isConfirmed = false, roof = DEFAULT_ROOF) {
   if (type === SHAPE_TYPE.CROSS_PILLAR) return makeCrossPillarMesh(ox, oy, oz, sx, sy, sz, mat, edgeMat, isConfirmed);
-  if (type === SHAPE_TYPE.ROOF) return makeRoofMesh(ox, oy, oz, sx, sy, sz, mat, edgeMat);
+  if (type === SHAPE_TYPE.ROOF) return makeRoofMesh(ox, oy, oz, sx, sy, sz, mat, edgeMat, roof);
   return makeBoxMesh(ox, oy, oz, sx, sy, sz, mat, edgeMat);
 }
 

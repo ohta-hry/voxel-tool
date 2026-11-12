@@ -1,17 +1,17 @@
 import { dom } from '../dom.js';
-import { placedBoxes } from '../state.js';
+import { registry } from '../registry.js';
 
 export function refreshDropdown() {
   const prev = dom.boxSelect.value;
   dom.boxSelect.innerHTML = '<option value="">── 選択 ──</option>';
-  placedBoxes.forEach((e, i) => {
+  registry.entries.forEach((e, i) => {
     const opt = document.createElement('option');
     opt.value = i;
     opt.textContent = e.label;
     dom.boxSelect.appendChild(opt);
   });
   // 選択が有効ならそのまま復元
-  if (prev !== '' && placedBoxes[parseInt(prev)]) dom.boxSelect.value = prev;
+  if (prev !== '' && registry.get(parseInt(prev))) dom.boxSelect.value = prev;
   else dom.boxSelect.value = '';
 }
 

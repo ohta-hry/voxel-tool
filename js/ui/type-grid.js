@@ -1,18 +1,21 @@
 import { SHAPE_TYPE } from '../constants.js';
 import { dom } from '../dom.js';
-import { state, placedBoxes } from '../state.js';
+import { state } from '../state.js';
+import { registry } from '../registry.js';
 import { SHAPE_DEFS, getEntryType } from '../shape-defs.js';
 import { TYPE_SVGS } from '../type-icons.js';
-import { updatePreview } from '../preview.js';
 
+// タイプ選択（state.activeType の変更が reactions.js 経由で syncTypeCards / プレビューに反映される）
 export function setActiveType(typeId) {
   state.activeType = typeId;
+}
+
+// 選択カードの強調表示と、屋根専用UIの表示切り替え
+export function syncTypeCards() {
   document.querySelectorAll('.type-card').forEach(card => {
-    card.classList.toggle('selected', card.dataset.type === typeId);
+    card.classList.toggle('selected', card.dataset.type === state.activeType);
   });
-  // 屋根軸UIの表示切り替え
-  dom.roofAxisRow.style.display = (typeId === SHAPE_TYPE.ROOF) ? 'flex' : 'none';
-  updatePreview();
+  dom.roofAxisRow.style.display = (state.activeType === SHAPE_TYPE.ROOF) ? 'flex' : 'none';
 }
 
 // タイプグリッドを動的生成
@@ -30,7 +33,7 @@ export function buildTypeGrid() {
     card.addEventListener('click', () => {
       // 編集中: roof ↔ box/cross_pillar のカテゴリ越え変更を禁止
       if (state.editingIndex >= 0) {
-        const currentIsRoof = getEntryType(placedBoxes[state.editingIndex]) === SHAPE_TYPE.ROOF;
+        const currentIsRoof = getEntryType(registry.get(state.editingIndex)) === SHAPE_TYPE.ROOF;
         const targetIsRoof = id === SHAPE_TYPE.ROOF;
         if (currentIsRoof !== targetIsRoof) return;
       }

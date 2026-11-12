@@ -48,6 +48,14 @@ function lineMaterial(color) {
   return createEdgeMaterial(color, { transparent: false, opacity: 1 });
 }
 
+function clearAxisGroup() {
+  for (const child of axisGroup.children) {
+    child.geometry.dispose();
+    child.material.dispose();
+  }
+  axisGroup.clear();
+}
+
 function addAxisLine(a, b, color) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute([...a, ...b], VOXEL.bufferPositionItemSize));
@@ -55,8 +63,8 @@ function addAxisLine(a, b, color) {
 }
 
 export function buildGrid(cx, cz) {
-  if (gridLines)     { scene.remove(gridLines);     gridLines.geometry.dispose(); }
-  if (boundaryLines) { scene.remove(boundaryLines); boundaryLines.geometry.dispose(); }
+  if (gridLines)     { scene.remove(gridLines);     gridLines.geometry.dispose();     gridLines.material.dispose(); }
+  if (boundaryLines) { scene.remove(boundaryLines); boundaryLines.geometry.dispose(); boundaryLines.material.dispose(); }
 
   const pos = [];
   for (let z = 0; z <= cz; z++) pos.push(0, 0, z, cx, 0, z);
@@ -72,7 +80,7 @@ export function buildGrid(cx, cz) {
   boundaryLines = new THREE.LineSegments(bg, lineMaterial(THEME.color.boundary));
   scene.add(boundaryLines);
 
-  axisGroup.clear();
+  clearAxisGroup();
   addAxisLine([0, 0, 0], [cx + VOXEL.unit, 0, 0], THEME.color.xAxis);
   addAxisLine([0, 0, 0], [0, Math.max(cx, cz) * SCENE.axisHeightScale + VOXEL.unit, 0], THEME.color.yAxis);
   addAxisLine([0, 0, 0], [0, 0, cz + VOXEL.unit], THEME.color.zAxis);

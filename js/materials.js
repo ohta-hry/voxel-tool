@@ -15,3 +15,6 @@ export const UNIT_EDGE_GEO = new THREE.EdgesGeometry(UNIT_BOX_GEO);
 export const PREVIEW_MAT = createSolidMaterial(THEME.color.preview, { opacity: THEME.opacity.preview, depthWrite: false });
 export const PREVIEW_EMAT = createEdgeMaterial(THEME.color.previewEdge, { opacity: THEME.opacity.previewEdge });
 export const SELECT_EMAT = createEdgeMaterial(THEME.color.selectedEdge, { opacity: 1.0 });
+
+// 複数メッシュで共有しているリソース。dispose してはいけない
+export const SHARED_RESOURCES = new Set([UNIT_BOX_GEO, UNIT_EDGE_GEO, PREVIEW_MAT, PREVIEW_EMAT, SELECT_EMAT]);

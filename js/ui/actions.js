@@ -1,10 +1,11 @@
 import { UI } from '../config.js';
 import { dom } from '../dom.js';
-import { state, placedBoxes } from '../state.js';
+import { state } from '../state.js';
+import { registry } from '../registry.js';
 import { autoSave } from '../autosave.js';
-import { setValues } from '../form.js';
+import { setValues, readShapeSpec } from '../form.js';
+import { hexToInt } from '../utils.js';
 import { updatePreview } from '../preview.js';
-import { placeBox, applyFormToEntry, removeEntry, removeAllEntriesFromScene, refreshEntryLabels } from '../entries.js';
 import { refreshDropdown } from './dropdown.js';
 import { closeDrawer } from './drawer.js';
 import { askConfirm } from './confirm.js';
@@ -14,7 +15,7 @@ const CONFIRM_MESSAGE = '本当に消す？';
 
 // ── 各操作（データ変更 → 画面反映 → 保存 の順でまとめる）──────────────────────
 function place() {
-  placeBox();
+  registry.add({ ...readShapeSpec(), color: hexToInt(state.activeColor) });
   refreshDropdown();
   autoSave();
   closeDrawer();
@@ -24,7 +25,7 @@ function place() {
 function confirmEdit() {
   if (state.editingIndex < 0) return;
   const savedIdx = state.editingIndex;
-  applyFormToEntry(savedIdx);
+  registry.update(savedIdx, readShapeSpec());
   refreshDropdown();
   autoSave();
   enterNormalMode();
@@ -34,8 +35,8 @@ function confirmEdit() {
 function deleteEditingEntry() {
   const idx = state.editingIndex;
   askConfirm(dom.btnSecondary, CONFIRM_MESSAGE, () => {
-    removeEntry(idx);
-    refreshEntryLabels();
+    registry.remove(idx);
+    registry.refreshLabels();
     refreshDropdown();
     autoSave();
     enterNormalMode();
@@ -45,7 +46,7 @@ function deleteEditingEntry() {
 
 function clearAll() {
   askConfirm(dom.btnSecondary, CONFIRM_MESSAGE, () => {
-    removeAllEntriesFromScene();
+    registry.clear();
     refreshDropdown();
     autoSave();
     updatePreview();
@@ -79,7 +80,7 @@ export function initActions() {
     if (dom.btnSecondary.dataset.confirming === '1') return;
     if (state.editingIndex >= 0) {
       deleteEditingEntry();
-    } else if (placedBoxes.length > 0) {
+    } else if (registry.count > 0) {
       clearAll();
     }
   });

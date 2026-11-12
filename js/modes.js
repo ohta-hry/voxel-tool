@@ -1,10 +1,13 @@
 import { THEME } from './config.js';
 import { SHAPE_TYPE } from './constants.js';
-import { state, placedBoxes } from './state.js';
+import { state } from './state.js';
 import { scene } from './scene.js';
+import { disposeObject3D } from './dispose.js';
 import { SELECT_EMAT, createEdgeMaterial } from './materials.js';
 import { makeEdgeVoxelGroupForEntry } from './shapes.js';
 import { getEntryType } from './shape-defs.js';
+
+// このモジュールは registry に依存しない（エントリ配列は呼び出し側から受け取る）
 
 // 複数セルを Group にまとめる形状（十字柱・屋根）かどうか
 function isCellGroup(mesh) {
@@ -39,9 +42,8 @@ export function applyDisplayModesToEntry(entry) {
   }
 }
 
-export function highlightBox(idx, on) {
-  if (idx < 0 || idx >= placedBoxes.length) return;
-  const mesh = placedBoxes[idx].mesh;
+export function highlightBox(entry, on) {
+  const mesh = entry.mesh;
   const edgeMatFor = () => (on ? SELECT_EMAT : createEdgeMaterial());
   const opacity = on ? THEME.opacity.selected : THEME.opacity.solid;
 
@@ -62,18 +64,14 @@ export function highlightBox(idx, on) {
   }
 }
 
-export function applyWireframeMode() {
-  for (const e of placedBoxes) {
+export function applyWireframeMode(entries) {
+  for (const e of entries) {
     setMeshVisibility(e.mesh, !state.wireframeMode, true);
-  }
-  if (state.previewMesh) {
-    state.previewMesh.visible = !state.wireframeMode;
-    if (state.previewMesh.children[0]) state.previewMesh.children[0].visible = true;
   }
 }
 
-export function applyEdgeVoxelMode() {
-  for (const e of placedBoxes) {
+export function applyEdgeVoxelMode(entries) {
+  for (const e of entries) {
     if (getEntryType(e) === SHAPE_TYPE.ROOF) continue; // 表示状態を変えない
 
     setMeshVisibility(e.mesh, !state.edgeVoxelMode && !state.wireframeMode, !state.edgeVoxelMode);
@@ -88,8 +86,12 @@ export function applyEdgeVoxelMode() {
       e.edgeGroup.visible = false;
     }
   }
-  // プレビューは edgeVoxelMode 中でも通常表示（配置前の確認用）
-  if (state.previewMesh) {
-    state.previewMesh.visible = !state.wireframeMode;
-  }
+}
+
+// 辺ボクセルグループを破棄する（entry.edgeGroup を null に戻す）
+export function discardEdgeGroup(entry) {
+  if (!entry.edgeGroup) return;
+  scene.remove(entry.edgeGroup);
+  disposeObject3D(entry.edgeGroup);
+  entry.edgeGroup = null;
 }

@@ -2,7 +2,6 @@ import { THEME } from '../config.js';
 import { ROOF_AXIS, ROOF_AXIS_CYCLE } from '../constants.js';
 import { dom } from '../dom.js';
 import { state } from '../state.js';
-import { updatePreview } from '../preview.js';
 
 const isXAxis = axis => axis === ROOF_AXIS.PLUS_X || axis === ROOF_AXIS.MINUS_X;
 const isZAxis = axis => axis === ROOF_AXIS.PLUS_Z || axis === ROOF_AXIS.MINUS_Z;
@@ -32,23 +31,18 @@ export function updateRoofAxisButtons() {
   }
 }
 
+// state.roofAxis / roofGable の変更は reactions.js 経由でボタン表示とプレビューに反映される
 export function initRoofControls() {
   // 選択中の軸と同じ系統なら +/- 反転、別系統なら + にリセット
   dom.btnRoofX.addEventListener('click', () => {
     state.roofAxis = isXAxis(state.roofAxis) ? ROOF_AXIS_CYCLE[state.roofAxis] : ROOF_AXIS.PLUS_X;
-    updateRoofAxisButtons();
-    updatePreview();
   });
 
   dom.btnRoofZ.addEventListener('click', () => {
     state.roofAxis = isZAxis(state.roofAxis) ? ROOF_AXIS_CYCLE[state.roofAxis] : ROOF_AXIS.PLUS_Z;
-    updateRoofAxisButtons();
-    updatePreview();
   });
 
   dom.btnRoofGable.addEventListener('click', () => {
     state.roofGable = !state.roofGable;
-    updateRoofAxisButtons();
-    updatePreview();
   });
 }

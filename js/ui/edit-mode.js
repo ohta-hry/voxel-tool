@@ -1,10 +1,10 @@
 import { UI } from '../config.js';
 import { SHAPE_TYPE } from '../constants.js';
 import { dom } from '../dom.js';
-import { state, placedBoxes } from '../state.js';
+import { state, batch } from '../state.js';
+import { registry } from '../registry.js';
 import { getEntryType } from '../shape-defs.js';
 import { normalizeRoofAxis } from '../logic/roof.js';
-import { highlightBox } from '../modes.js';
 import { getValues, setValues } from '../form.js';
 import { updatePreview } from '../preview.js';
 import { resetBoxSelect } from './dropdown.js';
@@ -35,7 +35,7 @@ function setButtonsEdit() {
 
 // 編集状態の解除（ハイライト・選択・ボタン表示を通常に戻す）
 function leaveEditState() {
-  if (state.editingIndex >= 0) highlightBox(state.editingIndex, false);
+  if (state.editingIndex >= 0) registry.highlight(state.editingIndex, false);
   state.editingIndex = -1;
   resetBoxSelect();
   setButtonsNormal();
@@ -59,23 +59,24 @@ export function startDerive() {
 }
 
 export function enterEditMode(idx) {
-  if (state.editingIndex >= 0) highlightBox(state.editingIndex, false);
+  if (state.editingIndex >= 0) registry.highlight(state.editingIndex, false);
   state.editingIndex = idx;
-  highlightBox(idx, true);
+  registry.highlight(idx, true);
 
-  const e = placedBoxes[idx];
+  const e = registry.get(idx);
   setValues(e.ox, e.oy, e.oz, e.sx, e.sy, e.sz);
 
   // roof なら entry の roofAxis/roofGable を復元。roofGable は必ず上書きする（前のエントリの状態を残さない）
-  if (getEntryType(e) === SHAPE_TYPE.ROOF) {
-    if (e.roofAxis) state.roofAxis = normalizeRoofAxis(e.roofAxis);
-    state.roofGable = !!e.roofGable;
-  } else {
-    state.roofGable = false;
-  }
-
-  // setActiveType は roof-axis-row の表示も制御する
-  setActiveType(getEntryType(e));
+  // 変更はまとめて通知し、プレビュー/ボタン表示の更新を1回にする
+  batch(() => {
+    if (getEntryType(e) === SHAPE_TYPE.ROOF) {
+      if (e.roofAxis) state.roofAxis = normalizeRoofAxis(e.roofAxis);
+      state.roofGable = !!e.roofGable;
+    } else {
+      state.roofGable = false;
+    }
+    setActiveType(getEntryType(e));
+  });
   updateRoofAxisButtons();
 
   setButtonsEdit();
