@@ -1,10 +1,8 @@
 import { UI } from '../config.js';
-import { SHAPE_TYPE } from '../constants.js';
 import { dom } from '../dom.js';
 import { state, batch } from '../state.js';
 import { registry } from '../registry.js';
-import { getEntryType } from '../shape-defs.js';
-import { normalizeRoofAxis } from '../logic/roof.js';
+import { syncStateFromEntry } from '../shapes/index.js';
 import { getValues, setValues } from '../form.js';
 import { updatePreview } from '../preview.js';
 import { resetBoxSelect } from './dropdown.js';
@@ -66,16 +64,11 @@ export function enterEditMode(idx) {
   const e = registry.get(idx);
   setValues(e.ox, e.oy, e.oz, e.sx, e.sy, e.sz);
 
-  // roof なら entry の roofAxis/roofGable を復元。roofGable は必ず上書きする（前のエントリの状態を残さない）
+  // エントリの形状固有パラメータ（屋根の勾配軸など）をUI状態へ反映する
   // 変更はまとめて通知し、プレビュー/ボタン表示の更新を1回にする
   batch(() => {
-    if (getEntryType(e) === SHAPE_TYPE.ROOF) {
-      if (e.roofAxis) state.roofAxis = normalizeRoofAxis(e.roofAxis);
-      state.roofGable = !!e.roofGable;
-    } else {
-      state.roofGable = false;
-    }
-    setActiveType(getEntryType(e));
+    syncStateFromEntry(e);
+    setActiveType(e.type);
   });
   updateRoofAxisButtons();
 

@@ -1,9 +1,9 @@
 import { UI, THEME, TIMING } from './config.js';
-import { SHAPE_TYPE, ROOF_AXIS } from './constants.js';
+import { SHAPE_TYPE } from './constants.js';
 import { dom } from './dom.js';
 import { state } from './state.js';
 import { registry } from './registry.js';
-import { SHAPE_DEFS, getEntryType } from './shape-defs.js';
+import { getShape, hasShape } from './shapes/index.js';
 import { buildGrid } from './scene.js';
 import { updatePreview } from './preview.js';
 import { refreshDropdown } from './ui/dropdown.js';
@@ -17,40 +17,25 @@ export function initPersistence() {
   function createSaveData() {
     return {
       canvasX: state.canvasX, canvasZ: state.canvasZ,
-      boxes: registry.entries.map(e => {
-        const type = getEntryType(e);
-        const isRoof = type === SHAPE_TYPE.ROOF;
-        return {
-          ox: e.ox, oy: e.oy, oz: e.oz,
-          sx: e.sx, sy: e.sy, sz: e.sz,
-          color: e.color, label: e.label,
-          type,
-          // roof専用: DDA勾配軸 (+x/-x/+z/-z)
-          roofAxis: isRoof ? (e.roofAxis || ROOF_AXIS.PLUS_X) : undefined,
-          roofGable: isRoof ? !!e.roofGable : undefined,
-        };
-      }),
+      boxes: registry.entries.map(e => ({
+        ox: e.ox, oy: e.oy, oz: e.oz,
+        sx: e.sx, sy: e.sy, sz: e.sz,
+        color: e.color, label: e.label,
+        type: e.type,
+        // 形状固有パラメータ（屋根: roofAxis / roofGable）。保存キーは各形状の serialize が決める
+        ...getShape(e.type).params?.serialize(e.params),
+      })),
     };
   }
 
-  // 'x' のような旧形式は '+x' に補正。不正値は fallback
-  function normalizeRoofAxisValue(value, fallback = ROOF_AXIS.PLUS_X) {
-    if (!value) return fallback;
-    if (Object.values(ROOF_AXIS).includes(value)) return value;
-    const normalized = '+' + value;
-    return (normalized === ROOF_AXIS.PLUS_X || normalized === ROOF_AXIS.PLUS_Z) ? normalized : fallback;
-  }
-
   function restoreBoxFromData(b) {
-    const type = (b.type && SHAPE_DEFS[b.type]) ? b.type : SHAPE_TYPE.BOX;
-    const isRoof = type === SHAPE_TYPE.ROOF;
+    const type = hasShape(b.type) ? b.type : SHAPE_TYPE.BOX;
     registry.add({
       type,
       ox: b.ox, oy: b.oy, oz: b.oz,
       sx: b.sx, sy: b.sy, sz: b.sz,
       color: b.color,
-      roofAxis: isRoof ? normalizeRoofAxisValue(b.roofAxis) : undefined,
-      roofGable: isRoof ? !!b.roofGable : undefined,
+      params: getShape(type).params?.deserialize(b),
     });
   }
 

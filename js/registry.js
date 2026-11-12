@@ -1,40 +1,26 @@
-import { SHAPE_TYPE, ROOF_AXIS } from './constants.js';
+import { SHAPE_TYPE } from './constants.js';
 import { scene } from './scene.js';
 import { createSolidMaterial, createEdgeMaterial } from './materials.js';
 import { disposeObject3D } from './dispose.js';
-import { makeShapeMesh, makeEdgeVoxelGroupForEntry } from './shapes.js';
-import { applyDisplayModesToEntry, highlightBox, discardEdgeGroup } from './modes.js';
-import { SHAPE_DEFS, getEntryType } from './shape-defs.js';
+import { getShape, hasShape, buildShapeMesh, makeEdgeVoxelGroupForEntry } from './shapes/index.js';
+import { applyDisplayModesToEntry } from './modes.js';
 
 // 配置済みボックスの管理。シーンへの追加/削除・メッシュ再構築・リソース解放をここに集約する。
-// DOM・ドロップダウン・保存には触れない（呼び出し側が担当）。
+// DOM・ドロップダウン・保存には触れない（呼び出し側が担当）。形状ごとの処理は shapes/ のプラグインに委譲。
 //
-// spec: { type, ox,oy,oz, sx,sy,sz, color(0xRRGGBB の数値), roofAxis?, roofGable? }
+// spec:  { type, ox,oy,oz, sx,sy,sz, color(0xRRGGBB の数値), params? }
 // entry: spec + { mesh, edgeGroup, label }
 
 export function formatBoxLabel(entry, index) {
-  const type = getEntryType(entry);
-  const def = SHAPE_DEFS[type];
-  const typeLabel = type === SHAPE_TYPE.BOX
-    ? ''
-    : ` [${def?.label || type}${type === SHAPE_TYPE.ROOF ? '(' + entry.roofAxis + ')' : ''}]`;
+  const typeLabel = getShape(entry.type).typeLabel(entry);
   return `Box ${index + 1}${typeLabel} (${entry.ox},${entry.oy},${entry.oz}) ${entry.sx}×${entry.sy}×${entry.sz}`;
 }
 
-// 色の数値を、メッシュ（または Group 配下の各セル）のマテリアルに反映する
-function applyColorToMesh(mesh, color) {
-  if (mesh.userData && mesh.userData.isCrossPillar) {
-    for (const child of mesh.children) {
-      if (child.userData && child.userData.isOutlineEdge) continue;
-      child.material.color.setHex(color);
-    }
-  } else if (mesh.userData && mesh.userData.isRoof) {
-    for (const child of mesh.children) {
-      if (child.material) child.material.color.setHex(color);
-    }
-  } else {
-    mesh.material.color.setHex(color);
-  }
+function discardEdgeGroup(entry) {
+  if (!entry.edgeGroup) return;
+  scene.remove(entry.edgeGroup);
+  disposeObject3D(entry.edgeGroup);
+  entry.edgeGroup = null;
 }
 
 class BoxRegistry {
@@ -69,7 +55,7 @@ class BoxRegistry {
   recolor(index, color) {
     const entry = this._entries[index];
     entry.color = color;
-    applyColorToMesh(entry.mesh, color);
+    getShape(entry.type).setColor(entry.mesh, color);
     if (entry.edgeGroup) {
       discardEdgeGroup(entry);
       entry.edgeGroup = makeEdgeVoxelGroupForEntry(entry);
@@ -79,12 +65,11 @@ class BoxRegistry {
 
   highlight(index, on) {
     const entry = this._entries[index];
-    if (entry) highlightBox(entry, on);
+    if (entry) getShape(entry.type).highlight(entry.mesh, on);
   }
 
   remove(index) {
-    const entry = this._entries[index];
-    this._disposeEntry(entry);
+    this._disposeEntry(this._entries[index]);
     this._entries.splice(index, 1);
   }
 
@@ -101,23 +86,22 @@ class BoxRegistry {
 
   // ── 内部 ──
   _assignSpec(entry, spec) {
-    const type = spec.type || SHAPE_TYPE.BOX;
-    const isRoof = type === SHAPE_TYPE.ROOF;
+    const type = hasShape(spec.type) ? spec.type : SHAPE_TYPE.BOX;
+    const shape = getShape(type);
     entry.type = type;
     entry.ox = spec.ox; entry.oy = spec.oy; entry.oz = spec.oz;
     entry.sx = spec.sx; entry.sy = spec.sy; entry.sz = spec.sz;
     entry.color = spec.color;
-    entry.roofAxis = isRoof ? (spec.roofAxis || ROOF_AXIS.PLUS_X) : undefined;
-    entry.roofGable = isRoof ? !!spec.roofGable : undefined;
+    entry.params = shape.params ? shape.params.normalize(spec.params) : undefined;
   }
 
   _buildMesh(entry) {
-    // 確定済みなので Face Culling 適用（isConfirmed = true）
-    return makeShapeMesh(
-      getEntryType(entry), entry.ox, entry.oy, entry.oz, entry.sx, entry.sy, entry.sz,
-      createSolidMaterial(entry.color), createEdgeMaterial(), true,
-      { axis: entry.roofAxis, gable: entry.roofGable }
-    );
+    // 確定済みなので Face Culling 等の最適化を適用（confirmed = true）
+    return buildShapeMesh(entry, {
+      mat: createSolidMaterial(entry.color),
+      edgeMat: createEdgeMaterial(),
+      confirmed: true,
+    });
   }
 
   _rebuild(entry) {

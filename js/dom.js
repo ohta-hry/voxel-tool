@@ -14,7 +14,6 @@ export const dom = {
   typeGrid: $('type-grid'),
 
   // 屋根
-  roofAxisRow: $('roof-axis-row'),
   btnRoofX: $('btn-roof-x'),
   btnRoofZ: $('btn-roof-z'),
   btnRoofGable: $('btn-roof-gable'),

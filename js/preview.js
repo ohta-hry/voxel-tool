@@ -5,12 +5,12 @@ import { scene } from './scene.js';
 import { disposeObject3D } from './dispose.js';
 import { registry } from './registry.js';
 import { createSolidMaterial, PREVIEW_MAT, PREVIEW_EMAT } from './materials.js';
-import { makeShapeMesh } from './shapes.js';
-import { getEntryType } from './shape-defs.js';
+import { getShape, buildShapeMesh, readParamsFromState } from './shapes/index.js';
 import { readShapeSpec } from './form.js';
 import { hexToInt } from './utils.js';
 
 let previewMesh = null;
+let previewType = null;
 
 export function updatePreview() {
   if (previewMesh) {
@@ -19,29 +19,25 @@ export function updatePreview() {
     previewMesh = null;
   }
 
-  const spec = readShapeSpec();
   const editing = state.editingIndex >= 0;
-  const type = editing ? getEntryType(registry.get(state.editingIndex)) : state.activeType;
+  // 編集中は編集対象のタイプ、新規配置時は選択中のタイプでプレビュー
+  const type = editing ? registry.get(state.editingIndex).type : state.activeType;
+  const spec = { ...readShapeSpec(), type, params: readParamsFromState(type) };
 
   // 編集中は半透明プレビュー、新規配置時は選択色でプレビュー
   const mat = editing
     ? PREVIEW_MAT
     : createSolidMaterial(new THREE.Color(hexToInt(state.activeColor)), { opacity: THEME.opacity.activePreview, depthWrite: false });
-  const mesh = makeShapeMesh(type, spec.ox, spec.oy, spec.oz, spec.sx, spec.sy, spec.sz, mat, PREVIEW_EMAT,
-    false, { axis: spec.roofAxis, gable: spec.roofGable });
+  const mesh = buildShapeMesh(spec, { mat, edgeMat: PREVIEW_EMAT, confirmed: false });
 
-  if (mesh.userData && (mesh.userData.isCrossPillar || mesh.userData.isRoof)) {
-    for (const child of mesh.children) child.visible = !state.wireframeMode;
-  } else {
-    mesh.visible = !state.wireframeMode;
-  }
   previewMesh = mesh;
+  previewType = type;
+  refreshPreviewVisibility();
   scene.add(mesh);
 }
 
-// ワイヤーフレーム/辺ボクセルモード切替時にプレビューの表示だけ更新する
+// ワイヤーフレームモード切替時にプレビューの表示だけ更新する（面を隠してエッジのみ表示）
 export function refreshPreviewVisibility() {
   if (!previewMesh) return;
-  previewMesh.visible = !state.wireframeMode;
-  if (previewMesh.children[0]) previewMesh.children[0].visible = true;
+  getShape(previewType).setVisibility(previewMesh, !state.wireframeMode, true);
 }

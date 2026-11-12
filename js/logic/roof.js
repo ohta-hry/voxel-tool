@@ -3,9 +3,12 @@ import { ROOF_AXIS } from '../constants.js';
 
 const VALID_AXES = new Set(Object.values(ROOF_AXIS));
 
-// 'x' のような符号なし旧データを '+x' に補正する
-export function normalizeRoofAxis(value) {
-  return VALID_AXES.has(value) ? value : '+' + value;
+// 'x' のような符号なし旧データを '+x' に補正する。不正値は fallback
+export function normalizeRoofAxis(value, fallback = ROOF_AXIS.PLUS_X) {
+  if (!value) return fallback;
+  if (VALID_AXES.has(value)) return value;
+  const normalized = '+' + value;
+  return (normalized === ROOF_AXIS.PLUS_X || normalized === ROOF_AXIS.PLUS_Z) ? normalized : fallback;
 }
 
 // DDAで屋根ボクセルを生成する
