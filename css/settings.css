@@ -48,11 +48,37 @@
 }
 .setting-text:focus { border-color: #4a90d9; }
 
-/* 大きなボタン（「✓ 適用」#btn-apply-settings と同じ見た目・大きさ） */
+/* 3つ並びの切り替え（filled / outline / checked_wool）は文字が長いので少し詰める */
+.seg-toggle.three .seg-btn { font-size: 10px; letter-spacing: 0; padding: 7px 2px; min-width: 0; }
+
+/* 大きなボタン（「✓ 適用」#btn-apply-settings と同じ見た目・大きさ）
+   読込済み(data-kind=export)は適用ボタンと同じ緑、未読込(data-kind=load)は赤め */
 #btn-data-action {
   background: #1e3a28; border: 1px solid #2e6040; color: #6fd89a;
   font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 1px;
   padding: 7px; border-radius: 6px; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
 }
 #btn-data-action:active { background: #2a5035; }
+#btn-data-action[data-kind="load"] { background: #3a1e1e; border-color: #8a3a3a; color: #e88a8a; }
+#btn-data-action[data-kind="load"]:active { background: #4a2626; }
+#btn-data-action:disabled { opacity: 0.55; cursor: default; }
+#btn-data-action .btn-icon { display: inline-flex; flex-shrink: 0; }
+
+/* 状態表示とログ */
+.data-status { font-size: 9px; line-height: 1.5; color: #777e94; word-break: break-all; }
+.data-status:empty { display: none; }
+.data-status.error { color: #d08080; }
+.data-log-box summary {
+  font-size: 9px; color: #555c70; letter-spacing: 1px; cursor: pointer; user-select: none;
+}
+#data-log {
+  margin: 4px 0 0; padding: 6px; max-height: 110px; overflow: auto;
+  background: #0d0f14; border: 1px solid #2a2f3d; border-radius: 6px;
+  color: #8a91a6; font-family: 'Courier New', monospace; font-size: 9px; line-height: 1.4;
+  white-space: pre-wrap; word-break: break-all;
+}
+
+/* ログを開いて縦に長くなってもキャンバス内に収める */
+#settings-drawer { max-height: 100%; overflow-y: auto; }

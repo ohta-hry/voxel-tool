@@ -6,6 +6,9 @@
 
 /** @typedef {{ axis: RoofAxis, gable: boolean }} RoofParams  屋根固有パラメータ */
 
+/** @typedef {'filled'|'outline'|'checked_wool'} SchemType  b6.py の設置タイプ（A/B/C に対応） */
+/** @typedef {'unloaded'|'starting'|'installing'|'ready'|'exporting'} PyStatus */
+
 /** @typedef {[number, number, number]} Voxel3  ボクセルのローカル座標 [lx, ly, lz] */
 /** @typedef {[number, number]} Cell2           フットプリントのセル [lx, lz] */
 /** @typedef {{ lx: number, ly: number, lz: number }} VoxelXYZ */
@@ -82,6 +85,9 @@
  * @property {boolean} roofGable        両屋根（切妻）モード
  * @property {boolean} edgeVoxelMode
  * @property {number} editingIndex      -1 = 通常モード, >=0 = そのボックスを編集中
+ * @property {SchemType} schemType      schem書き出しの設置タイプ
+ * @property {string} schemFilename     schem書き出しのファイル名（空 = 既定名）
+ * @property {PyStatus} pyStatus        Pyodide の読み込み状況
  */
 
 /**

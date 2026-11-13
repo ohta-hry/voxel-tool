@@ -1,6 +1,7 @@
 import { UI } from './config.js';
 import { PRESET_COLORS } from './palette.js';
 import { SHAPE_TYPE, ROOF_AXIS } from './constants.js';
+import { DEFAULT_SCHEM_TYPE } from './schem/constants.js';
 
 // ── 共有状態ストア ────────────────────────────────────────────────────────────
 // ・state.xxx = value で書き込むと、値が変わったときだけ購読者に通知される
@@ -21,6 +22,11 @@ const data = {
   edgeVoxelMode: false,
 
   editingIndex: -1, // -1 = 通常モード, >=0 = そのボックスを編集中
+
+  // 「データ」タブの schem 書き出し（b6.py）
+  schemType: DEFAULT_SCHEM_TYPE, // b6.py の設置タイプ（filled/outline/checked_wool）
+  schemFilename: '',             // 出力ファイル名（空 = b6.py の既定名）
+  pyStatus: 'unloaded',          // Pyodide の読み込み状況
 };
 
 /** @typedef {keyof import('./types.js').AppState} StateKey */

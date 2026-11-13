@@ -47,15 +47,20 @@
 
       <div class="drawer-sep"></div>
 
-      <!-- ↓ 仮のUI（機能は未実装） -->
+      <!-- schem書き出し（b6.py をPyodideで実行）: ボタン=設置タイプ引数 / テキストボックス=ファイル名引数 -->
       <div class="seg-toggle three" id="data-mode-toggle">
-        <button class="seg-btn active">a</button>
-        <button class="seg-btn">b</button>
-        <button class="seg-btn">c</button>
+        <button class="seg-btn active" data-schem-type="filled">filled</button>
+        <button class="seg-btn" data-schem-type="outline">outline</button>
+        <button class="seg-btn" data-schem-type="checked_wool">checked_wool</button>
       </div>
       <div class="drawer-title">ファイル名</div>
       <input class="setting-text" id="data-filename" type="text" autocomplete="off" spellcheck="false">
-      <button id="btn-data-action">▶ 実行（仮）</button>
+      <button id="btn-data-action" data-kind="load"><span class="btn-icon"></span><span class="btn-label">読み込み</span></button>
+      <div id="data-status" class="data-status"></div>
+      <details class="data-log-box">
+        <summary>ログ</summary>
+        <pre id="data-log"></pre>
+      </details>
     </div>
 
   </div>

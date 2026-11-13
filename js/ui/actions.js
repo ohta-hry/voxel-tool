@@ -2,7 +2,7 @@ import { UI } from '../config.js';
 import { dom } from '../dom.js';
 import { state } from '../state.js';
 import { registry } from '../registry.js';
-import { autoSave } from '../autosave.js';
+import { autoSave } from '../persistence-link.js';
 import { setValues, readShapeSpec } from '../form.js';
 import { hexToInt } from '../utils.js';
 import { updatePreview } from '../preview.js';

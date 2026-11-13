@@ -12,12 +12,12 @@ export function closeDrawer() {
 
 
 /**
- * 切り替えボタン（.seg-toggle）。押したボタンだけを active にし、
- * data-pane が付いていれば対応するペイン（.drawer-pane）だけを表示する。
- * （a / b / c の仮ボタンは見た目の切り替えのみで、機能は未実装）
+ * 「表示 / データ」の切り替え（#settings-tabs）。押したボタンだけを active にし、
+ * data-pane の指すペイン（.drawer-pane）だけを表示する。
+ * （filled / outline / checked_wool の選択は ui/schem-panel.js が state で管理する）
  */
 function initSegmentedToggles() {
-  queryAll('.seg-toggle').forEach(group => {
+  queryAll('#settings-tabs').forEach(group => {
     const buttons = /** @type {HTMLElement[]} */ ([...group.querySelectorAll('.seg-btn')]);
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
