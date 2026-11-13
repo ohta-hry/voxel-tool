@@ -1,0 +1,19 @@
+{
+  // エディタ(VS Code)の補完・型表示用。JSDoc の型（js/types.js）が効くようになります。
+  // 型エラーを表示したい場合は checkJs を true にし、次を実行してください:
+  //   npm i -D typescript @types/three@0.128.0
+  //   npx tsc -p jsconfig.json
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "paths": { "three": ["./node_modules/@types/three"] }
+  },
+  "include": ["js/**/*.js"]
+}
