@@ -26,4 +26,11 @@ export const dom = {
   btnApplySettings: byId('btn-apply-settings'),
   chkEdgeVoxel: inputById('chk-edge-voxel'),
   chkEdgeVoxelIcon: byId('chk-edge-voxel-icon'),
+
+  // 「データ」タブ（schem書き出し）
+  dataModeToggle: byId('data-mode-toggle'),
+  dataFilename: inputById('data-filename'),
+  btnDataAction: byId('btn-data-action'),
+  dataStatus: byId('data-status'),
+  dataLog: byId('data-log'),
 };
