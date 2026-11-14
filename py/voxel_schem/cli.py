@@ -1,18 +1,16 @@
-"""コマンドライン入口。引数の解釈・入力の受け取り・.schem の保存を担当する。"""
+"""コマンドライン入口。引数の解釈と、base64 の入力受付を担当する。"""
 import argparse
-import sys
 import os
-import mcschematic
-from datetime import datetime
+import sys
 
-from .config import OUT_DIR, MC_VERSION_NAME
-from .loader import decode_save
-from .generator import generate_placements
+from .errors import SaveDataError
+from .export import default_filename, export_schem, report_saved
 
 
-def parse_args():
-    """コマンドライン引数から設置タイプとファイル名を取得"""
+def parse_args(argv=None):
+    """コマンドライン引数から設置タイプとファイル名を取得（argv が None なら sys.argv）"""
     parser = argparse.ArgumentParser(
+        prog="b6.py",
         description="base64の建築データから .schem を生成します（base64は起動後に入力）"
     )
     parser.add_argument(
@@ -23,11 +21,11 @@ def parse_args():
         "filename", nargs="?", default=None,
         help="出力ファイル名（拡張子不要。省略でデフォルト名）"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     name = (args.filename or "").strip()
     if not name:
-        name = f"generated_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        name = default_filename()
     return args.type, name
 
 
@@ -44,27 +42,12 @@ def get_data():
         return text
 
 
-def main():
-    build_type, filename = parse_args()
-
+def main(argv=None):
+    build_type, filename = parse_args(argv)
     encoded_data = get_data()
     try:
-        data = decode_save(encoded_data)
-    except Exception as e:
-        print(f"❌ base64データの読み込みに失敗しました: {e}")
+        path = export_schem(encoded_data, build_type, filename)
+    except SaveDataError as e:
+        print(f"❌ {e}")
         sys.exit(1)
-
-    os.makedirs(OUT_DIR, exist_ok=True)
-    schem = mcschematic.MCSchematic()
-
-    placements, warnings = generate_placements(data['boxes'], build_type)
-    for message in warnings:
-        print(message)
-    for pos, block in placements:
-        schem.setBlock(pos, block)
-
-    schem.save(OUT_DIR, filename, getattr(mcschematic.Version, MC_VERSION_NAME))
-
-    print(f"✅ 保存完了しました！")
-    print(f"ファイル → {OUT_DIR}/{filename}.schem")
-    print(f"設置タイプ: {build_type}")
+    report_saved(path, build_type)

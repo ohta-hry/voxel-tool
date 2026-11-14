@@ -1,6 +1,7 @@
-"""設定値。JS側の js/schem/constants.js の OUT_DIR（保存先）と一致させること。"""
+"""設定値。"""
 
-# 作業ディレクトリ直下の保存先フォルダ名
+# コマンドライン(b6.py)で実行したときの保存先フォルダ名（作業ディレクトリ直下）。
+# ブラウザ(Pyodide)では js/schem/constants.js の OUT_DIR が b6_runner.run に渡されるので、この値は使われない。
 OUT_DIR = "myschems"
 
 # mcschematic.Version の属性名（保存する .schem のMinecraftバージョン）

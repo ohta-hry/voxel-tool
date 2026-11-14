@@ -18,6 +18,17 @@
 
 `app.js` はアプリの中心です。形状生成、配置・編集、UIイベントはまだ個別モジュールになっていません。追加で分割するときは依存関係と初期化順を保ち、循環importを避けてください。
 
+## schem書き出し（Python / Pyodide）
+
+アプリのシーンを Minecraft の `.schem` にします。ブラウザでは Pyodide 上で `py/` の Python を動かし、コマンドラインでも同じコードを使えます。
+
+- `py/b6.py` — コマンドライン入口（`python py/b6.py <A|B|C> [ファイル名]`、base64 は起動後に入力。要 `pip install mcschematic`）
+- `py/b6_runner.py` — ブラウザ(Pyodide)から呼ぶ入口
+- `py/voxel_schem/` — 本体。形状（`shapes/`）と設置タイプ A/B/C（`styles.py`）を分けてあり、新しい形状は形状ファイルを足すだけで追加できる
+- `py/manifest.json` — ブラウザへ配置する Python ファイルの一覧。ファイルを増減したら `python tools/make_py_manifest.py` で更新する
+- `docs/save-format.md` — 保存データ形式、設置タイプの仕様、新しい形状を追加する手順
+- `tests/` — 回帰テスト。`python -m unittest discover -s tests -v`（JS側は `node --test tests/js/runtime.test.mjs`）
+
 ## 状態と互換性
 
 - ES Modulesの変数は `window` のグローバルではありません。共有状態は `app.js` が管理し、機能モジュールにはコールバックやアクセサーで渡します。

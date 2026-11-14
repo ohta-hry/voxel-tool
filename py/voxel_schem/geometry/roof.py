@@ -1,5 +1,20 @@
 """屋根ボクセル生成（アプリのJS実装 js/logic/roof.js を移植）。"""
 
+VALID_AXES = ('+x', '-x', '+z', '-z')
+
+
+def normalize_roof_axis(value, fallback='+x'):
+    """roofAxis を '+x'|'-x'|'+z'|'-z' に正規化する（JS の normalizeRoofAxis と同じ規則）。
+
+    旧形式 'x' / 'z' は '+x' / '+z' として読む。空・不正な値は fallback。
+    """
+    if not value or not isinstance(value, str):
+        return fallback
+    if value in VALID_AXES:
+        return value
+    normalized = '+' + value
+    return normalized if normalized in ('+x', '+z') else fallback
+
 
 def compute_roof_voxels(sx, sy, sz, axis):
     """
