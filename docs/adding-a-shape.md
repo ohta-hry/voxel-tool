@@ -1,6 +1,6 @@
 # 新しい形状(type)を追加する
 
-直方体・十字柱・屋根と並列の新しい形状（例: ドーム）を足す手順です。
+直方体・角欠け直方体・屋根と並列の新しい形状（例: ドーム）を足す手順です。
 形状は JS（見た目・保存・復元）と Python（`.schem` 書き出し）の両方に必要です。
 
 ## 考え方
@@ -12,11 +12,11 @@
 
 形状側で A/B/C の分岐を書く必要はありません。形状は `Voxel`（`voxel.py`）を返すだけです。
 
-- `edge` … 設置タイプ B/C は辺だけを置く（A は辺でなくても置く）。辺の定義は形状ごとに決めてよい（十字柱のように、JS の辺ボクセル表示とは別定義でもよい。その場合は意図を `docs/save-format.md` の仕様表に書く）
+- `edge` … 設置タイプ B/C は辺だけを置く（A は辺でなくても置く）。辺の定義は形状ごとに決めてよい（角欠け直方体のように、JS の辺ボクセル表示とは別定義でもよい。その場合は意図を `docs/save-format.md` の仕様表に書く）
 - `checker` … 設置タイプ C の市松。0 = gray_wool / 1 = white_wool。位相は形状ごとに決める
 - `kind` … 通常は `BODY`。屋根のように設置タイプによらず別の素材にしたい形状は `ROOF`（素材を増やすなら `styles.py` の `block_for`）
 
-## 手順A: 固有パラメータが無い形状（直方体・十字柱と同じ種類）
+## 手順A: 固有パラメータが無い形状（直方体・角欠け直方体と同じ種類）
 
 ### 1. 雛形を作る
 
@@ -41,9 +41,9 @@ python tools/new_shape.py dome --label ドーム --desc "半球状のドーム"
 | `js/shapes/dome.js` | `build()`（見た目のメッシュ）、`edgeVoxels()`（辺ボクセル表示の対象。不要なら削除）、`icon`、`typeLabel` |
 | `py/voxel_schem/shapes/dome.py` | `dome_voxels()`（どの座標にボクセルを置くか、`edge`、`checker`）。同じ座標を2回返さないこと |
 
-座標の計算が長いときは、`py/voxel_schem/geometry/` に分けます（屋根・十字柱が見本）。
+座標の計算が長いときは、`py/voxel_schem/geometry/` に分けます（屋根・角欠け直方体が見本）。
 
-`category`（JS）は、編集中にタイプを切り替えられる範囲です。同じ `category` 同士でだけ切り替えられます。
+`category`（JS）は、編集中にタイプを切り替えられる範囲です。同じ `category` 同士でだけ切り替えられます（ピラーは専用の `pillar` で、他のどの形状とも相互変換しません）。
 
 ### 3. お手本とテスト
 
@@ -68,7 +68,8 @@ node --test tests/js/runtime.test.mjs
 JS
 1. `params`（`ShapeParams`、`js/types.js`）を定義する: `normalize` / `fromState` / `toState` / `reset` / `serialize` / `deserialize`。保存キーは `serialize` が決める（屋根の `roofAxis` / `roofGable` が見本）
 2. `js/state.js` と `js/types.js` の `AppState` に、フォーム／プレビュー用の状態を足す
-3. 専用UI: `index.html` に操作部品の行を足し、`controlsId` にその id を指定する（選択中だけ表示される）。`js/dom.js` に要素を足し、`js/ui/<name>-controls.js` で状態と配線し、`js/reactions.js` で状態の変更をプレビューとボタン表示に反映する
+3. サイズ欄の意味が違う形状（ピラーの「長さ」のように、3つの `sx` `sy` `sz` と対応しないもの）は、形状に `sizeFromForm(values, state)` を持たせる。入力欄の値から実際のサイズを作る関数で、`readShapeSpec` が使う。欄の見出し・表示切り替えは、ピラーの `js/ui/pillar-controls.js` が見本
+4. 専用UI: `index.html` に操作部品の行を足し、`controlsId` にその id を指定する（選択中だけ表示される）。`js/dom.js` に要素を足し、`js/ui/<name>-controls.js` で状態と配線し、`js/reactions.js` で状態の変更をプレビューとボタン表示に反映する
 
 Python
 1. 保存キーを、その形状の `*_voxels()` の中で読む。不正値・欠落値の扱いは **JS の `normalize` と同じ規則**にする（屋根の `normalize_roof_axis` が見本。JS と Python で扱いが違うと、プレビューと書き出しが食い違う）

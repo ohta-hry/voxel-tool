@@ -39,9 +39,10 @@ persistence.js  createSaveData()                  voxel_schem.export_schem
 | type | 固有キー | 内容 |
 |---|---|---|
 | `box` | なし | 直方体 |
-| `cross_pillar` | なし | 十字柱（四隅を欠いた柱） |
+| `cross_pillar` | なし | 角欠け直方体（四隅を1マス欠いた直方体）。ページ上の表示名は「角欠け直方体」 |
 | `roof` | `roofAxis` | `+x` `-x` `+z` `-z`。旧形式 `x` / `z` は `+x` / `+z` として読む。空・不正な値は `+x`（JS の `normalizeRoofAxis` と同じ規則） |
 | `roof` | `roofGable` | `true` で両流れ（省略は `false`） |
+| `pillar` | `pillarAxis` | `x` `y` `z`（伸びる方向）。空・不正な値は `y`（縦）。`sx` `sy` `sz` のうち**軸に対応する値が長さ**で、軸以外は `1` で保存される（Python は軸以外の値を無視する） |
 
 ## 3. Python 側の検証
 
@@ -58,11 +59,11 @@ persistence.js  createSaveData()                  voxel_schem.export_schem
 
 形状は「どのボクセルが辺か」「市松の色」を決め、設置タイプはそれをブロックに対応させます（`voxel.py` / `styles.py`）。
 
-| 設置タイプ | 躯体（箱・十字柱） | 屋根 |
-|---|---|---|
-| A 敷き詰め | 全ボクセルを stone | end_stone |
-| B 辺のみ滑石 | 辺のボクセルだけ smooth_stone | end_stone |
-| C まだら辺 | 辺のボクセルだけ、市松に gray_wool / white_wool | end_stone |
+| 設置タイプ | 躯体（直方体・角欠け直方体） | ピラー | 屋根 |
+|---|---|---|---|
+| A 敷き詰め | 全ボクセルを stone | 軸付きの polished_basalt（例: `minecraft:polished_basalt[axis=y]`） | end_stone |
+| B 辺のみ滑石 | 辺のボクセルだけ smooth_stone | A と同じ（全ボクセルが辺のため） | end_stone |
+| C まだら辺 | 辺のボクセルだけ、市松に gray_wool / white_wool | 直方体（1×1×長さ）と同じ規則 | end_stone |
 
 形状ごとの定義（意図した仕様。リファクタリングでも変えない）:
 
@@ -70,9 +71,10 @@ persistence.js  createSaveData()                  voxel_schem.export_schem
 |---|---|---|
 | box | 3軸のうち2軸以上で端に接するセル | 原点セルを偶数とし、偶数=gray / 奇数=white |
 | cross_pillar | 上下面: 外周（角を除く）と内側の4角（中央は空洞）。中間層: 角の隣のセルだけ | 偶数=white / 奇数=gray（**箱とは逆位相**） |
+| pillar | 全ボクセルが辺（1×1×長さ） | 原点セルを偶数とし、偶数=gray / 奇数=white（箱と同じ位相。C のみ） |
 | roof | （辺の概念なし。全セルを屋根として置く） | － |
 
-※ 十字柱の辺は、JS の「辺ボクセル表示」とは別の定義です（これも意図した仕様）。
+※ 角欠け直方体の辺は、JS の「辺ボクセル表示」とは別の定義です（これも意図した仕様）。
 
 ## 5. 新しい形状(type)を追加するとき
 

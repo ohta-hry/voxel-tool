@@ -18,6 +18,15 @@ export const dom = {
   btnRoofZ: byId('btn-roof-z'),
   btnRoofGable: byId('btn-roof-gable'),
 
+  // ピラー
+  btnPillarX: byId('btn-pillar-x'),
+  btnPillarY: byId('btn-pillar-y'),
+  btnPillarZ: byId('btn-pillar-z'),
+
+  // サイズ欄（ピラーでは軸に対応する1つだけを「長さ」として表示する）
+  sizeHeader: byId('size-header'),
+  sizeWraps: { x: byId('size-wrap-x'), y: byId('size-wrap-y'), z: byId('size-wrap-z') },
+
   // 設定ドロワー
   drawer: byId('settings-drawer'),
   toggleBtn: byId('btn-settings-toggle'),

@@ -12,6 +12,6 @@
   config.py     出力先・Minecraftバージョンなどの設定値
   voxel.py      形状とスタイルの受け渡し用データ(Voxel)
   styles.py     ビルドタイプ(A/B/C)ごとのブロック選択
-  geometry/     形状ごとの座標計算（屋根・十字柱）
+  geometry/     形状ごとの座標計算（屋根・角欠け直方体）
   shapes/       形状ごとのボクセル生成と、type名の登録表
 """

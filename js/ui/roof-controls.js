@@ -8,8 +8,9 @@ const isXAxis = axis => axis === ROOF_AXIS.PLUS_X || axis === ROOF_AXIS.MINUS_X;
 /** @param {string} axis */
 const isZAxis = axis => axis === ROOF_AXIS.PLUS_Z || axis === ROOF_AXIS.MINUS_Z;
 
-/** @param {HTMLElement} btn @param {boolean} active */
-function paintButton(btn, active) {
+/** 軸ボタンの見た目（選択中=強調 / それ以外=グレー）
+ * @param {HTMLElement} btn @param {boolean} active */
+export function paintButton(btn, active) {
   btn.style.background = active ? THEME.css.primaryBg : THEME.css.panel;
   btn.style.borderColor = active ? THEME.css.primaryBorder : THEME.css.panelBorder;
   btn.style.color = active ? THEME.css.primaryText : THEME.css.mutedText;

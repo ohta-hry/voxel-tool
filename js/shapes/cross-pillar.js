@@ -20,12 +20,12 @@ function makeCulledCellGeometry(cellSet, lx, lz, sy, confirmed) {
   return geo;
 }
 
-// 十字柱: 5×5ベースで四隅1マス欠けの柱
+// 角欠け直方体（type: cross_pillar）: 5×5ベースで四隅1マス欠けの柱
 /** @type {import('../types.js').ShapeDefinition} */
 export const crossPillarShape = {
   id: SHAPE_TYPE.CROSS_PILLAR,
-  label: '十字柱',
-  desc: '角1マス欠け\n直方体亜種',
+  label: '角欠け直方体',
+  desc: '四隅を1マスずつ\n欠いた直方体',
   icon: TYPE_SVGS.cross_pillar,
   category: 'solid',
 
@@ -75,5 +75,5 @@ export const crossPillarShape = {
     return computeCrossPillarEdgeVoxels(cells, toCellSet(cells), sy);
   },
 
-  typeLabel: () => ' [十字柱]',
+  typeLabel: () => ' [角欠け直方体]',
 };

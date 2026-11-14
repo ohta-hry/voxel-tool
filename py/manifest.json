@@ -10,11 +10,13 @@
     "voxel_schem/generator.py",
     "voxel_schem/geometry/__init__.py",
     "voxel_schem/geometry/cross_pillar.py",
+    "voxel_schem/geometry/pillar.py",
     "voxel_schem/geometry/roof.py",
     "voxel_schem/loader.py",
     "voxel_schem/shapes/__init__.py",
     "voxel_schem/shapes/box.py",
     "voxel_schem/shapes/cross_pillar.py",
+    "voxel_schem/shapes/pillar.py",
     "voxel_schem/shapes/roof.py",
     "voxel_schem/styles.py",
     "voxel_schem/voxel.py"

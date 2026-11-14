@@ -1,4 +1,4 @@
-"""cross_pillar（十字柱）: footprint 全セル×全高さを返し、辺は上下面/中間面で別定義。
+"""cross_pillar（角欠け直方体）: footprint 全セル×全高さを返し、辺は上下面/中間面で別定義。
 
   上下面（ly==0 / ly==sy-1）の辺 → get_cross_pillar_top_cells（中央が空洞）
   中間面（それ以外）の辺        → get_cross_pillar_mid_cells

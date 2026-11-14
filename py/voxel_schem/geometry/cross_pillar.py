@@ -1,4 +1,4 @@
-"""十字柱(cross_pillar)のセル集合の計算。"""
+"""角欠け直方体(cross_pillar)のセル集合の計算。"""
 
 
 def get_cross_pillar_cells(sx, sz):

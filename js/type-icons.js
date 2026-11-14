@@ -73,4 +73,9 @@ export const TYPE_SVGS = {
 <rect x="2" y="30" width="6" height="6" fill="none" stroke="#2a3a5a" stroke-width="0.8" stroke-dasharray="2,1.5" rx="0.5"/>
 <rect x="30" y="30" width="6" height="6" fill="none" stroke="#2a3a5a" stroke-width="0.8" stroke-dasharray="2,1.5" rx="0.5"/>
 </svg>`,
+  pillar: `<svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+<polygon points="19,3 27,7 19,11 11,7" fill="#5ba8ff" fill-opacity="0.55" stroke="#6aaad8" stroke-width="1"/>
+<polygon points="11,7 19,11 19,35 11,31" fill="#2a4a7a" fill-opacity="0.85" stroke="#6aaad8" stroke-width="1"/>
+<polygon points="27,7 19,11 19,35 27,31" fill="#3a60a0" fill-opacity="0.85" stroke="#6aaad8" stroke-width="1"/>
+</svg>`,
 };

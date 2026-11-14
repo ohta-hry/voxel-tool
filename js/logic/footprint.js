@@ -1,4 +1,4 @@
-// 十字柱（5×5ベースで四隅1マス欠け）のフットプリント計算
+// 角欠け直方体（cross_pillar。5×5ベースで四隅1マス欠け）のフットプリント計算
 
 /** @param {number} x @param {number} z */
 export const cellKey = (x, z) => `${x},${z}`;

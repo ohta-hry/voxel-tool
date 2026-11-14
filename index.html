@@ -116,7 +116,7 @@
       <div class="header-row">
         <div></div>
         <div class="col-header">基準点</div>
-        <div class="col-header">サイズ</div>
+        <div class="col-header" id="size-header">サイズ</div>
       </div>
       <div class="grid-row" style="margin-top:6px">
         <div class="axis-label x">X</div>
@@ -125,7 +125,7 @@
           <input class="spin-input" id="ox" type="number" value="0" min="0" step="1">
           <button class="spin-btn" data-target="ox" data-delta="1">+</button>
         </div>
-        <div class="spin-wrap">
+        <div class="spin-wrap" id="size-wrap-x">
           <button class="spin-btn" data-target="sx" data-delta="-1">−</button>
           <input class="spin-input" id="sx" type="number" value="1" min="1" step="1">
           <button class="spin-btn" data-target="sx" data-delta="1">+</button>
@@ -138,7 +138,7 @@
           <input class="spin-input" id="oz" type="number" value="0" min="0" step="1">
           <button class="spin-btn" data-target="oz" data-delta="1">+</button>
         </div>
-        <div class="spin-wrap">
+        <div class="spin-wrap" id="size-wrap-z">
           <button class="spin-btn" data-target="sz" data-delta="-1">−</button>
           <input class="spin-input" id="sz" type="number" value="1" min="1" step="1">
           <button class="spin-btn" data-target="sz" data-delta="1">+</button>
@@ -151,7 +151,7 @@
           <input class="spin-input" id="oy" type="number" value="0" min="0" step="1">
           <button class="spin-btn" data-target="oy" data-delta="1">+</button>
         </div>
-        <div class="spin-wrap">
+        <div class="spin-wrap" id="size-wrap-y">
           <button class="spin-btn" data-target="sy" data-delta="-1">−</button>
           <input class="spin-input" id="sy" type="number" value="1" min="1" step="1">
           <button class="spin-btn" data-target="sy" data-delta="1">+</button>
@@ -164,6 +164,13 @@
       <button id="btn-roof-x" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#2a4a6e;border:1px solid #3a6a9e;color:#8ec8f8;">+X</button>
       <button id="btn-roof-z" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#1b1f2a;border:1px solid #2a2f3d;color:#555c70;">+Z</button>
       <button id="btn-roof-gable" class="action-btn" style="flex:0 0 auto;padding:6px 7px;font-size:11px;background:#1b1f2a;border:1px solid #2a2f3d;color:#555c70;" title="両屋根（切妻）モード">両</button>
+    </div>
+    <!-- ピラー専用UI (pillar選択時のみ表示。勾配軸の行と同じ位置) -->
+    <div id="pillar-axis-row" style="display:none; gap:6px; align-items:center;">
+      <span style="font-size:9px;color:#555c70;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">軸</span>
+      <button id="btn-pillar-x" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#1b1f2a;border:1px solid #2a2f3d;color:#555c70;">X</button>
+      <button id="btn-pillar-y" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#2a4a6e;border:1px solid #3a6a9e;color:#8ec8f8;">Y</button>
+      <button id="btn-pillar-z" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#1b1f2a;border:1px solid #2a2f3d;color:#555c70;">Z</button>
     </div>
     <div class="btn-row">
       <button id="btn-primary" class="action-btn">▶ 配置</button>

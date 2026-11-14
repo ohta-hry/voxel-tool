@@ -3,6 +3,7 @@ import { registry } from './registry.js';
 import { applyEdgeVoxelMode } from './modes.js';
 import { updatePreview } from './preview.js';
 import { updateRoofAxisButtons } from './ui/roof-controls.js';
+import { updatePillarAxisButtons, syncPillarForm } from './ui/pillar-controls.js';
 import { syncTypeCards } from './ui/type-grid.js';
 
 // 「状態が変わったら何を更新するか」をここに集約する
@@ -10,7 +11,9 @@ export function initReactions() {
   subscribe('edgeVoxelMode', () => {
     applyEdgeVoxelMode(registry.entries);
   });
-  subscribe(['activeType', 'activeColor', 'roofAxis', 'roofGable'], updatePreview);
+  subscribe(['activeType', 'activeColor', 'roofAxis', 'roofGable', 'pillarAxis'], updatePreview);
   subscribe(['roofAxis', 'roofGable'], updateRoofAxisButtons);
+  subscribe('pillarAxis', updatePillarAxisButtons);
+  subscribe(['activeType', 'pillarAxis'], syncPillarForm);
   subscribe('activeType', syncTypeCards);
 }

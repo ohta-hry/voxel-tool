@@ -14,6 +14,6 @@ def box_voxels(box):
                     (y == oy or y == oy + sy - 1) +
                     (z == oz or z == oz + sz - 1)
                 )
-                # 市松: 原点セルが偶数 → 0(gray)。十字柱とは逆位相（意図した仕様）
+                # 市松: 原点セルが偶数 → 0(gray)。角欠け直方体とは逆位相（意図した仕様）
                 parity = (x - ox + y - oy + z - oz) % 2
                 yield Voxel(x, y, z, edge=on_edge >= 2, checker=parity)
