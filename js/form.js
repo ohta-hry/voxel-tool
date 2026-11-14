@@ -1,7 +1,7 @@
 import { UI } from './config.js';
 import { state } from './state.js';
 import { inputById } from './dom-utils.js';
-import { readParamsFromState } from './shapes/index.js';
+import { readParamsFromState, getShape } from './shapes/index.js';
 
 // 基準点(ox,oy,oz)・サイズ(sx,sy,sz)のスピナー入力を読み書きする
 /** @param {string} id */
@@ -22,9 +22,20 @@ export function setValues(ox, oy, oz, sx, sy, sz) {
   el('sx').value = String(sx); el('sy').value = String(sy); el('sz').value = String(sz);
 }
 
-// 現在のフォーム値 + 選択中のタイプ・形状固有パラメータから、形状の仕様（spec）を作る
-/** @returns {import('./types.js').ShapeSpec} */
-export function readShapeSpec() {
-  const type = state.activeType;
-  return { type, ...getValues(), params: readParamsFromState(type) };
+// 現在のフォーム値 + 指定タイプ（省略=選択中）・形状固有パラメータから、形状の仕様（spec）を作る
+// サイズ欄の意味が違う形状（ピラーの「長さ」）は、shape.sizeFromForm で実際のサイズに直す
+/** @param {string} [type]
+ * @returns {import('./types.js').ShapeSpec} */
+export function readShapeSpec(type = state.activeType) {
+  const values = getValues();
+  const sizes = getShape(type).sizeFromForm?.(values, state) ?? {};
+  return { type, ...values, ...sizes, params: readParamsFromState(type) };
+}
+
+// 入力欄の値を、その形状が実際に使う値にそろえて書き戻す（形状を切り替える前に使う）
+// 例: ピラー→直方体のとき、隠れていた古いサイズ欄が残らないようにする
+/** @param {string} type */
+export function commitSizesToForm(type) {
+  const s = readShapeSpec(type);
+  setValues(s.ox, s.oy, s.oz, s.sx, s.sy, s.sz);
 }

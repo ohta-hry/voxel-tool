@@ -1,6 +1,6 @@
 import { UI } from './config.js';
 import { PRESET_COLORS } from './palette.js';
-import { SHAPE_TYPE, ROOF_AXIS } from './constants.js';
+import { SHAPE_TYPE, ROOF_AXIS, PILLAR_AXIS } from './constants.js';
 import { DEFAULT_SCHEM_TYPE } from './schem/constants.js';
 
 // ── 共有状態ストア ────────────────────────────────────────────────────────────
@@ -18,6 +18,9 @@ const data = {
   // 屋根パラメータ（フォーム/プレビュー用。確定済みエントリは entry 側に持つ）
   roofAxis: ROOF_AXIS.PLUS_X,
   roofGable: false,
+
+  // ピラーパラメータ（フォーム/プレビュー用）
+  pillarAxis: PILLAR_AXIS.Y,
 
   edgeVoxelMode: false,
 

@@ -3,6 +3,7 @@ import { queryAll } from '../dom-utils.js';
 import { state } from '../state.js';
 import { registry } from '../registry.js';
 import { listShapes, getShape } from '../shapes/index.js';
+import { commitSizesToForm } from '../form.js';
 
 // タイプ選択（state.activeType の変更が reactions.js 経由で syncTypeCards / プレビューに反映される）
 /** @param {string} typeId */
@@ -38,11 +39,13 @@ export function buildTypeGrid() {
       <div class="type-label">${def.label}<br><span style="color:#3a4a5a;font-size:8px">${def.desc.replace('\n', '<br>')}</span></div>
     `;
     card.addEventListener('click', () => {
-      // 編集中: カテゴリ（solid ↔ roof）を越える変更は禁止
+      // 編集中: カテゴリ（solid / roof / pillar）を越える変更は禁止
       if (state.editingIndex >= 0) {
         const current = getShape(registry.get(state.editingIndex).type);
         if (current.category !== def.category) return;
       }
+      // サイズ欄の意味が違う形状（ピラー）から離れるときは、入力欄を実際のサイズにそろえる
+      if (id !== state.activeType && getShape(state.activeType).sizeFromForm) commitSizesToForm(state.activeType);
       setActiveType(id);
     });
     grid.appendChild(card);

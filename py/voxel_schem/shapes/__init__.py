@@ -9,9 +9,11 @@
 from .box import box_voxels
 from .cross_pillar import cross_pillar_voxels
 from .roof import roof_voxels
+from .pillar import pillar_voxels
 
 SHAPES = {
     "box": box_voxels,
     "roof": roof_voxels,
     "cross_pillar": cross_pillar_voxels,
+    "pillar": pillar_voxels,
 }

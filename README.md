@@ -13,8 +13,8 @@
 - `js/app.js` — 各モジュールの初期化の順序だけを持つ起点
 - `js/state.js` — 共有状態ストア（書き込みの変更検知と `subscribe`）。`js/reactions.js` が「状態が変わったら何を更新するか」を集約する
 - `js/registry.js` — 配置済みオブジェクトの管理（シーンへの追加・削除・再構築）
-- `js/shapes/` — 形状プラグイン（`box.js` / `cross-pillar.js` / `roof.js`）。`index.js` に登録する。新しい形状の追加手順は `docs/adding-a-shape.md`
-- `js/logic/` — 形状まわりの純粋な計算（屋根・十字柱の座標、辺ボクセルなど）
+- `js/shapes/` — 形状プラグイン（`box.js` / `cross-pillar.js`（ページ上の表示名は「角欠け直方体」）/ `roof.js` / `pillar.js`）。`index.js` に登録する。新しい形状の追加手順は `docs/adding-a-shape.md`
+- `js/logic/` — 形状まわりの純粋な計算（屋根・角欠け直方体の座標、辺ボクセルなど）
 - `js/ui/` — 画面部品の配線（タイプ選択、屋根の操作、編集モード、書き出しパネルなど）
 - `js/schem/` — schem書き出しのJS側（Pyodide の起動・Python ファイルの配置・実行・ダウンロード）
 - `js/persistence.js` — エクスポート／インポートと localStorage。保存形式は `docs/save-format.md`

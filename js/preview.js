@@ -23,7 +23,7 @@ export function updatePreview() {
   const editing = state.editingIndex >= 0;
   // 編集中は編集対象のタイプ、新規配置時は選択中のタイプでプレビュー
   const type = editing ? registry.get(state.editingIndex).type : state.activeType;
-  const spec = { ...readShapeSpec(), type, params: readParamsFromState(type) };
+  const spec = { ...readShapeSpec(type), type, params: readParamsFromState(type) };
 
   // 編集中は半透明プレビュー、新規配置時は選択色でプレビュー
   const mat = editing
