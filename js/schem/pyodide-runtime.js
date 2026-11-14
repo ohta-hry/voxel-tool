@@ -52,13 +52,15 @@ export function createPyodideRuntime({ platform, onStatus = () => {}, onLog = ()
     onLog(`mcschematicのimport成功: ${version}`);
   }
 
-  /** b6.py と実行ラッパーを仮想ファイルシステムに置く */
+  /** b6.py・実行ラッパー・voxel_schem パッケージを仮想ファイルシステムに置く */
   async function installPythonFiles() {
     onLog('b6.py を配置しています...');
     pyodide.FS.mkdirTree(SCRIPT_DIR);
     for (const fileName of PYTHON_FILES) {
       const source = await platform.fetchPythonSource(fileName);
-      pyodide.FS.writeFile(`${SCRIPT_DIR}/${fileName}`, source);
+      const dest = `${SCRIPT_DIR}/${fileName}`;
+      pyodide.FS.mkdirTree(dest.slice(0, dest.lastIndexOf('/')));  // voxel_schem/ などの下位フォルダ
+      pyodide.FS.writeFile(dest, source);
     }
     pyodide.runPython(`import sys\nif "${SCRIPT_DIR}" not in sys.path:\n    sys.path.insert(0, "${SCRIPT_DIR}")`);
   }
