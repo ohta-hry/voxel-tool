@@ -76,23 +76,15 @@ persistence.js  createSaveData()                  voxel_schem.export_schem
 
 ## 5. 新しい形状(type)を追加するとき
 
-JS 側
-1. `js/constants.js` の `SHAPE_TYPE` に追加し、`js/shapes/<name>.js` を作って `js/shapes/index.js` に登録する
-2. 固有パラメータがあるなら、`params.serialize` / `deserialize` で保存キーを決める → **この文書の 2 章の表を更新する**
-3. アイコン（`type-icons.js`）などの UI
-
-Python 側
-1. `py/voxel_schem/shapes/<name>.py` に、エントリ(dict)から `Voxel` を返す関数を作る。**辺の定義と市松の位相を決める**（`voxel.py` 参照）。座標計算が長いなら `geometry/` に分ける
-2. `py/voxel_schem/shapes/__init__.py` の `SHAPES` に1行追加する
-3. `python tools/make_py_manifest.py` で `py/manifest.json` を更新する（ブラウザへ配置するファイル一覧）
-4. テスト: `tests/golden/scenes/` にシーンを足し、`python tests/golden/generate_expected.py` でお手本を作る。このスクリプトは全件を作り直すので、実行後は `git diff` を見て、**既存シーンのお手本が変わっていない**ことを確認する（変わっていたら仕様変更になっている）。`tests/test_differential.py` は旧実装との比較用なので、新タイプは対象外
+手順は `docs/adding-a-shape.md` にまとめてあります。`python tools/new_shape.py <id> --label 表示名` で、JS・Python 両方の雛形と登録までできます。
+形状を足したら、この文書の 2 章（形状ごとの固有キー）と 4 章（辺の定義・市松の位相）の表も更新してください。
 
 ## 6. テスト
 
 リポジトリ直下で:
 
 ```
-python -m unittest discover -s tests -v     # Python（golden master・差分・検証・書き出し・manifest）
+python -m unittest discover -s tests -v     # Python（golden master・差分・検証・書き出し・manifest・形状の整合）
 node --test tests/js/runtime.test.mjs       # JS（Pyodide 配置・呼び出し。Node 22 以降）
 ```
 
