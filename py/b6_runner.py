@@ -1,63 +1,52 @@
-"""b6.py をブラウザ (Pyodide) 上で、コマンドライン実行と同じ形で動かすための薄いラッパー。
+"""ブラウザ (Pyodide) から .schem 書き出しを呼ぶための薄い入口。
 
-b6.py 自体は書き換えない。次の2点だけ差し替えて `__main__` として実行する。
-  - sys.argv : ["b6.py", タイプ(A/B/C), (任意) ファイル名]
-  - input()  : アプリのシーンデータ (base64) を返す
-出力は b6.py の仕様どおり、作業ディレクトリ直下の myschems/<ファイル名>.schem になる。
+コマンドラインと同じ引数の解釈(cli.parse_args)と書き出し(export.export_schem)を、
+関数として直接呼ぶ。入力は引数で受け取るので、input() や sys.argv の差し替えは不要。
+出力は out_dir（JS側が指定）の直下に <ファイル名>.schem として作られる。
 """
-import builtins
 import json
 import os
-import runpy
 import shutil
 import sys
 import traceback
 
-OUT_DIR = "myschems"  # b6.py が保存先にしている相対パス（b6.py 側と一致させる）
+from voxel_schem.cli import parse_args
+from voxel_schem.errors import SaveDataError
+from voxel_schem.export import export_schem, report_saved
 
 
-def run(script_path, argv_json, payload, work_dir):
-    """b6.py を実行して終了コードを返す（0 = 成功）。
+def run(argv_json, payload, out_dir):
+    """書き出しを実行して終了コードを返す（0 = 成功）。
 
-    script_path : b6.py のパス
-    argv_json   : コマンドライン引数（b6.py 自身の名前を除く）の JSON 配列
-    payload     : input() の代わりに返す base64 文字列
-    work_dir    : 作業ディレクトリ（この直下に myschems/ ができる）
+    argv_json : コマンドライン引数（プログラム名を除く）の JSON 配列。例: '["A", "name"]'
+    payload   : アプリのシーンデータ (base64 文字列)
+    out_dir   : 出力先フォルダ（絶対パス）。毎回空にしてから使う
     """
     argv = json.loads(argv_json)
 
-    os.chdir(work_dir)
     # 前回の出力が混ざらないよう、毎回空にしてから実行する
-    shutil.rmtree(OUT_DIR, ignore_errors=True)
-    os.makedirs(OUT_DIR, exist_ok=True)
+    shutil.rmtree(out_dir, ignore_errors=True)
+    os.makedirs(out_dir, exist_ok=True)
 
-    calls = {"n": 0}
-
-    def fake_input(prompt=""):
-        calls["n"] += 1
-        if calls["n"] > 1:  # 空入力などで b6 の入力ループが回り続けるのを防ぐ
-            raise EOFError("input() が2回以上呼ばれました")
-        print("（アプリのシーンデータを入力として渡しました）")
-        return payload
-
-    saved_input, saved_argv = builtins.input, sys.argv
-    builtins.input = fake_input
-    sys.argv = [script_path, *argv]
     try:
-        runpy.run_path(script_path, run_name="__main__")
-        return 0
+        build_type, filename = parse_args(argv)
+        print("（アプリのシーンデータを入力として渡しました）")
+        path = export_schem(payload, build_type, filename, out_dir)
     except SystemExit as e:
-        # argparse のエラー(2) や b6.py の sys.exit(1) など
+        # argparse の引数エラー(2) など
         if e.code is None:
             return 0
         if isinstance(e.code, int):
             return e.code
         print(e.code, file=sys.stderr)
         return 1
+    except SaveDataError as e:
+        print(f"❌ {e}")
+        return 1
     except Exception:
-        # 想定外の例外（入力ループ防止の EOFError など）も例外のまま外へ漏らさず、
-        # トレースバックをログに出して失敗(1)として返す
+        # 想定外の例外も外へ漏らさず、トレースバックをログに出して失敗(1)として返す
         traceback.print_exc()
         return 1
-    finally:
-        builtins.input, sys.argv = saved_input, saved_argv
+
+    report_saved(path, build_type)
+    return 0

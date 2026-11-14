@@ -1,4 +1,4 @@
-import { WORK_DIR, SCRIPT_DIR, OUT_DIR, B6_FILE, RUNNER_MODULE, PYTHON_FILES, SCHEM_EXT } from './constants.js';
+import { SCRIPT_DIR, OUT_DIR, MANIFEST_FILE, RUNNER_MODULE, SCHEM_EXT } from './constants.js';
 
 /**
  * @typedef {any} PyodideInterface  Pyodide 本体（CDN から読み込む）
@@ -6,12 +6,36 @@ import { WORK_DIR, SCRIPT_DIR, OUT_DIR, B6_FILE, RUNNER_MODULE, PYTHON_FILES, SC
  *
  * @typedef {Object} RuntimePlatform  実行環境ごとの差（ブラウザ/テスト）を吸収する
  * @property {() => Promise<PyodideInterface>} loadPyodide  Pyodide を起動して返す
- * @property {(fileName: string) => Promise<string>} fetchPythonSource  py/ 配下の .py の中身を返す
+ * @property {(fileName: string) => Promise<string>} fetchPythonSource  py/ 配下のファイル（.py と manifest.json）の中身を返す
  *
  * @typedef {Object} B6Result
  * @property {number} exitCode  0 = 成功
  * @property {{ name: string, bytes: Uint8Array }[]} files  生成された .schem
  */
+
+/**
+ * py/manifest.json（{ "files": ["b6.py", "voxel_schem/cli.py", ...] }）を読み、配置するファイルの一覧を返す。
+ * 一覧の各要素は py/ からの相対パスの .py であること（上位フォルダへの参照などは拒否する）。
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function parseManifest(text) {
+  /** @type {any} */
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`${MANIFEST_FILE} を読み取れません: ${/** @type {any} */ (e)?.message || e}`);
+  }
+  const files = data?.files;
+  if (!Array.isArray(files) || files.length === 0) throw new Error(`${MANIFEST_FILE} に files（配列）がありません`);
+  for (const f of files) {
+    const ok = typeof f === 'string' && f.endsWith('.py') && !f.startsWith('/') && !f.includes('\\')
+      && f.split('/').every(part => part !== '' && part !== '.' && part !== '..');
+    if (!ok) throw new Error(`${MANIFEST_FILE} のファイル名が不正です: ${JSON.stringify(f)}`);
+  }
+  return files;
+}
 
 /**
  * Pyodide の起動 → mcschematic のインストール → b6.py の実行、を担当する。
@@ -52,13 +76,16 @@ export function createPyodideRuntime({ platform, onStatus = () => {}, onLog = ()
     onLog(`mcschematicのimport成功: ${version}`);
   }
 
-  /** b6.py と実行ラッパーを仮想ファイルシステムに置く */
+  /** py/manifest.json の一覧どおりに、Python ファイルを仮想ファイルシステムへ置く */
   async function installPythonFiles() {
-    onLog('b6.py を配置しています...');
+    onLog('Pythonファイルを配置しています...');
     pyodide.FS.mkdirTree(SCRIPT_DIR);
-    for (const fileName of PYTHON_FILES) {
+    const files = parseManifest(await platform.fetchPythonSource(MANIFEST_FILE));
+    for (const fileName of files) {
       const source = await platform.fetchPythonSource(fileName);
-      pyodide.FS.writeFile(`${SCRIPT_DIR}/${fileName}`, source);
+      const dest = `${SCRIPT_DIR}/${fileName}`;
+      pyodide.FS.mkdirTree(dest.slice(0, dest.lastIndexOf('/')));  // voxel_schem/ などの下位フォルダ
+      pyodide.FS.writeFile(dest, source);
     }
     pyodide.runPython(`import sys\nif "${SCRIPT_DIR}" not in sys.path:\n    sys.path.insert(0, "${SCRIPT_DIR}")`);
   }
@@ -89,9 +116,9 @@ export function createPyodideRuntime({ platform, onStatus = () => {}, onLog = ()
   }
 
   /**
-   * b6.py を実行し、生成された .schem を回収する。回収後は仮想ファイルを削除する。
+   * 書き出しを実行し、生成された .schem を回収する。回収後は仮想ファイルを削除する。
    * @param {string[]} argv  コマンドライン引数（例: ['A', 'my_name']）
-   * @param {string} payload  input() の代わりに渡す base64 文字列
+   * @param {string} payload  アプリのシーンデータ (base64 文字列)
    * @returns {Promise<B6Result>}
    */
   async function runB6(argv, payload) {
@@ -100,7 +127,7 @@ export function createPyodideRuntime({ platform, onStatus = () => {}, onLog = ()
     /** @type {number} */
     let exitCode;
     try {
-      exitCode = runner.run(`${SCRIPT_DIR}/${B6_FILE}`, JSON.stringify(argv), payload, WORK_DIR);
+      exitCode = runner.run(JSON.stringify(argv), payload, OUT_DIR);
     } finally {
       runner.destroy();
     }
