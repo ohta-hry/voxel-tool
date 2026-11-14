@@ -1,13 +1,9 @@
-"""roof（屋根）の設置。"""
+"""roof（屋根）: アプリと同じDDAロジックで求めたセルを、屋根(ROOF)として返す。"""
+from ..voxel import Voxel, ROOF
 from ..geometry.roof import compute_roof_voxels, compute_gable_voxels
 
 
-def place_roof(schem, roof, build_type):
-    """
-    roof エントリをアプリと同じDDAロジックで設置する。
-    ビルドタイプA → stone で敷き詰め
-    ビルドタイプB/C → 辺判定はボクセル単位（1×1×1）で適用
-    """
+def roof_voxels(roof):
     ox, oy, oz = roof['ox'], roof['oy'], roof['oz']
     sx, sy, sz = roof['sx'], roof['sy'], roof['sz']
 
@@ -19,18 +15,8 @@ def place_roof(schem, roof, build_type):
 
     gable = bool(roof.get('roofGable', False))
 
-    # DDAでボクセルリスト取得（アプリ同様）
     voxels = compute_gable_voxels(sx, sy, sz, axis) if gable \
              else compute_roof_voxels(sx, sy, sz, axis)
 
     for (lx, ly, lz) in voxels:
-        wx = ox + lx
-        wy = oy + ly
-        wz = oz + lz
-
-        if build_type == "A":
-            # A専用の屋根処理（将来ここだけ変更可）
-            schem.setBlock((wx, wy, wz), "minecraft:end_stone")
-
-        else:  # B, C（将来ここだけ変更可）
-            schem.setBlock((wx, wy, wz), "minecraft:end_stone")
+        yield Voxel(ox + lx, oy + ly, oz + lz, kind=ROOF)

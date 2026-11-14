@@ -14,18 +14,6 @@ def get_cross_pillar_cells(sx, sz):
             if (lx, lz) not in excluded}
 
 
-def is_cross_pillar_outer(cell_set, lx, lz):
-    """
-    中間層の外周判定：隣接4方向のどれかがcell_setにない = 外周セル。
-    （上下面では使わない）
-    ※現在どこからも呼ばれていない（b6.py から移しただけ。段階2で扱いを決める）
-    """
-    for dx, dz in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-        if (lx + dx, lz + dz) not in cell_set:
-            return True
-    return False
-
-
 def get_cross_pillar_top_cells(sx, sz):
     """
     上下面の設置セル集合。

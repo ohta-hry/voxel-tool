@@ -1,22 +1,17 @@
-"""形状ごとの設置処理と、type フィールドによる振り分け。"""
-from .box import place_box
-from .cross_pillar import place_cross_pillar
-from .roof import place_roof
+"""形状の登録表。type 名 → 「エントリからボクセル列を返す関数」。
 
-# type 名 → 設置関数
-PLACERS = {
-    "box": place_box,
-    "roof": place_roof,
-    "cross_pillar": place_cross_pillar,
+新しい形状を足す手順:
+  1. shapes/<name>.py に、エントリ(dict)を受け取って Voxel を返す関数を作る
+     （辺の定義と市松の位相は形状ごとに決める → voxel.py 参照）
+  2. 下の SHAPES に1行追加する
+  3. js/schem/constants.js の PYTHON_FILES にファイルを追加する
+"""
+from .box import box_voxels
+from .cross_pillar import cross_pillar_voxels
+from .roof import roof_voxels
+
+SHAPES = {
+    "box": box_voxels,
+    "roof": roof_voxels,
+    "cross_pillar": cross_pillar_voxels,
 }
-
-
-def process_entry(schem, entry, build_type):
-    """type フィールドに応じて処理を振り分ける"""
-    entry_type = entry.get("type", "box")
-
-    placer = PLACERS.get(entry_type)
-    if placer is not None:
-        placer(schem, entry, build_type)
-    else:
-        print(f"⚠️  未対応のtype '{entry_type}' をスキップ: {entry.get('label', '(ラベルなし)')}")

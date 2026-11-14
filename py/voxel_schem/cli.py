@@ -7,7 +7,7 @@ from datetime import datetime
 
 from .config import OUT_DIR, MC_VERSION_NAME
 from .loader import decode_save
-from .shapes import process_entry
+from .generator import generate_placements
 
 
 def parse_args():
@@ -57,8 +57,11 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     schem = mcschematic.MCSchematic()
 
-    for entry in data['boxes']:
-        process_entry(schem, entry, build_type)
+    placements, warnings = generate_placements(data['boxes'], build_type)
+    for message in warnings:
+        print(message)
+    for pos, block in placements:
+        schem.setBlock(pos, block)
 
     schem.save(OUT_DIR, filename, getattr(mcschematic.Version, MC_VERSION_NAME))
 
