@@ -16,6 +16,7 @@ import { initEllipseControls } from './ui/ellipse-controls.js';
 import { buildTypeGrid } from './ui/type-grid.js';
 import { initActions } from './ui/actions.js';
 import { initSchemPanel } from './ui/schem-panel.js';
+import { initViewportSelection } from './ui/viewport-selection.js';
 
 // ── Scene ─────────────────────────────────────────────────────────────────────
 buildGrid(state.canvasX, state.canvasZ);
@@ -31,6 +32,7 @@ initRoofControls();
 initPillarControls();
 initEllipseControls(updatePreview);
 initActions();
+initViewportSelection();
 initReactions();
 const colorUI = initColorUI();
 
