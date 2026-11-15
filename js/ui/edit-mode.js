@@ -64,6 +64,7 @@ export function startDerive() {
 export function enterEditMode(idx) {
   if (state.editingIndex >= 0) registry.highlight(state.editingIndex, false);
   state.editingIndex = idx;
+  dom.boxSelect.value = String(idx);
   registry.highlight(idx, true);
 
   const e = registry.get(idx);
