@@ -22,6 +22,10 @@ const data = {
   // ピラーパラメータ（フォーム/プレビュー用）
   pillarAxis: PILLAR_AXIS.Y,
 
+  // 楕円パラメータ（フォーム用。schem 出力には関係しない）
+  ellipseCircle: false,      // isCircle: xz を同じサイズに連動
+  ellipseFixedCenter: false, // is_fixed_center: 増減幅2・位置を逆に動かして中心を固定
+
   edgeVoxelMode: false,
 
   editingIndex: -1, // -1 = 通常モード, >=0 = そのボックスを編集中

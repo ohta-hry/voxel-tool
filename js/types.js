@@ -10,6 +10,8 @@
 
 /** @typedef {{ axis: PillarAxis }} PillarParams  ピラー固有パラメータ */
 
+/** @typedef {{ isCircle: boolean, fixedCenter: boolean }} EllipseParams  楕円固有パラメータ（画面の入力補助。schem 出力には関係しない） */
+
 /** @typedef {'filled'|'outline'|'checked_wool'} SchemType  b6.py の設置タイプ（A/B/C に対応） */
 /** @typedef {'unloaded'|'starting'|'installing'|'ready'|'exporting'} PyStatus */
 
@@ -29,7 +31,7 @@
 /**
  * 形状の仕様。registry.add / update に渡す。
  * @typedef {Object} ShapeSpec
- * @property {string} type     shapes/index.js に登録済みの id（'box' | 'cross_pillar' | 'roof' | 'pillar' ...）
+ * @property {string} type     shapes/index.js に登録済みの id（'box' | 'cross_pillar' | 'roof' | 'pillar' | 'ellipse' ...）
  * @property {number} ox  @property {number} oy  @property {number} oz   基準点
  * @property {number} sx  @property {number} sy  @property {number} sz   サイズ
  * @property {number} [color]  色の数値（16進で 0xff0000 など）。update では既存の色を維持するため省略可
@@ -76,6 +78,10 @@
  * @property {(spec: ShapeSpec) => Voxel3[]} [edgeVoxels]  辺ボクセル座標。無ければ辺ボクセルモードの対象外
  * @property {(values: { sx: number, sy: number, sz: number }, state: AppState) => { sx: number, sy: number, sz: number }} [sizeFromForm]
  *     入力欄の値 → この形状が実際に使うサイズ（サイズ欄の意味が3つのsx/sy/szと違う形状のみ。例: ピラーの「長さ」）
+ * @property {(id: string, state: AppState) => number} [sizeStep]
+ *     サイズ欄(sx/sy/sz)の ±ボタンの増減幅（既定 1。楕円の中心固定は xz で 2）
+ * @property {(values: { ox: number, oy: number, oz: number, sx: number, sy: number, sz: number }, id: string, newSize: number, state: AppState) => { ox: number, oy: number, oz: number, sx: number, sy: number, sz: number }} [resizeLinked]
+ *     サイズ欄 id が newSize になったときの連動（他のサイズ欄・基準点の更新）。楕円の「円」「中心固定」
  * @property {(entry: BoxEntry) => string} typeLabel       ラベルに付く形状名（例: ' [屋根(+x)]'）
  * @property {ShapeParams} [params]
  */
@@ -90,6 +96,8 @@
  * @property {RoofAxis} roofAxis        屋根の勾配軸（フォーム/プレビュー用）
  * @property {boolean} roofGable        両屋根（切妻）モード
  * @property {PillarAxis} pillarAxis    ピラーの軸（フォーム/プレビュー用）
+ * @property {boolean} ellipseCircle        楕円: xz を同じサイズに連動（isCircle）
+ * @property {boolean} ellipseFixedCenter   楕円: 増減幅2・位置を逆に動かして中心を固定（is_fixed_center）
  * @property {boolean} edgeVoxelMode
  * @property {number} editingIndex      -1 = 通常モード, >=0 = そのボックスを編集中
  * @property {SchemType} schemType      schem書き出しの設置タイプ
@@ -108,6 +116,8 @@
  * @property {string} [roofAxis]   屋根のみ（旧形式 'x' / 'z' も読める）
  * @property {boolean} [roofGable] 屋根のみ
  * @property {string} [pillarAxis] ピラーのみ（'x'|'y'|'z'。軸以外のサイズは 1）
+ * @property {boolean} [isCircle] 楕円のみ（xz を同じサイズに連動）
+ * @property {boolean} [isFixedCenter] 楕円のみ（増減幅2・位置を逆に動かして中心を固定）
  */
 
 /**

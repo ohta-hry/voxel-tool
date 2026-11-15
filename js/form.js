@@ -20,6 +20,8 @@ export function getValues() {
 export function setValues(ox, oy, oz, sx, sy, sz) {
   el('ox').value = String(ox); el('oy').value = String(oy); el('oz').value = String(oz);
   el('sx').value = String(sx); el('sy').value = String(sy); el('sz').value = String(sz);
+  // サイズ欄の「変更前の値」。直接入力の増減幅を求める形状固有の連動規則（楕円など）が使う
+  for (const id of ['sx', 'sy', 'sz']) el(id).dataset.prev = el(id).value;
 }
 
 // 現在のフォーム値 + 指定タイプ（省略=選択中）・形状固有パラメータから、形状の仕様（spec）を作る

@@ -78,4 +78,8 @@ export const TYPE_SVGS = {
 <polygon points="11,7 19,11 19,35 11,31" fill="#2a4a7a" fill-opacity="0.85" stroke="#6aaad8" stroke-width="1"/>
 <polygon points="27,7 19,11 19,35 27,31" fill="#3a60a0" fill-opacity="0.85" stroke="#6aaad8" stroke-width="1"/>
 </svg>`,
+  ellipse: `<svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M5,12 L5,27 A14,7 0 0 0 33,27 L33,12 Z" fill="#2a4a7a" fill-opacity="0.85" stroke="#6aaad8" stroke-width="1"/>
+<ellipse cx="19" cy="12" rx="14" ry="7" fill="#5ba8ff" fill-opacity="0.55" stroke="#6aaad8" stroke-width="1"/>
+</svg>`,
 };

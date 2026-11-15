@@ -23,6 +23,10 @@ export const dom = {
   btnPillarY: byId('btn-pillar-y'),
   btnPillarZ: byId('btn-pillar-z'),
 
+  // 楕円
+  btnEllipseCircle: byId('btn-ellipse-circle'),
+  btnEllipseCenter: byId('btn-ellipse-center'),
+
   // サイズ欄（ピラーでは軸に対応する1つだけを「長さ」として表示する）
   sizeHeader: byId('size-header'),
   sizeWraps: { x: byId('size-wrap-x'), y: byId('size-wrap-y'), z: byId('size-wrap-z') },

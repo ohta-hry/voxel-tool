@@ -4,6 +4,7 @@ export const SHAPE_TYPE = Object.freeze({
   CROSS_PILLAR: 'cross_pillar',
   ROOF: 'roof',
   PILLAR: 'pillar',
+  ELLIPSE: 'ellipse',
 });
 
 // +x = X正方向に勾配上昇, -x = X負方向に上昇, z も同様

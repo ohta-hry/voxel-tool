@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -83,7 +83,7 @@
 <div id="modal-import" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-title">📂 セーブをインポート</div>
-    <div class="modal-desc">エクスポートする時にコピーしたコードを貼り付けてください。15sun</div>
+    <div class="modal-desc">エクスポートする時にコピーしたコードを貼り付けてください。</div>
     <textarea id="import-textarea" class="modal-textarea" placeholder="コードをここに貼り付け..."></textarea>
     <div class="modal-btn-row">
       <button id="btn-import-load" class="modal-btn ok">▶ ロード</button>
@@ -171,6 +171,12 @@
       <button id="btn-pillar-x" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#1b1f2a;border:1px solid #2a2f3d;color:#555c70;">X</button>
       <button id="btn-pillar-y" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#2a4a6e;border:1px solid #3a6a9e;color:#8ec8f8;">Y</button>
       <button id="btn-pillar-z" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#1b1f2a;border:1px solid #2a2f3d;color:#555c70;">Z</button>
+    </div>
+    <!-- 楕円専用UI (ellipse選択時のみ表示。勾配軸の行と同じ位置) -->
+    <div id="ellipse-options-row" style="display:none; gap:6px; align-items:center;">
+      <span style="font-size:9px;color:#555c70;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">XZ</span>
+      <button id="btn-ellipse-circle" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#1b1f2a;border:1px solid #2a2f3d;color:#555c70;" title="isCircle: xとzのサイズを同じにし、片方を増減するともう片方も同じだけ増減">円</button>
+      <button id="btn-ellipse-center" class="action-btn" style="flex:1;padding:6px 4px;font-size:11px;background:#1b1f2a;border:1px solid #2a2f3d;color:#555c70;" title="is_fixed_center: 増減幅を2にし、xzのサイズが2増えたら位置を1減らして中心を固定">中心固定</button>
     </div>
     <div class="btn-row">
       <button id="btn-primary" class="action-btn">▶ 配置</button>
