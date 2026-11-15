@@ -400,7 +400,19 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
+    /* タイプが増えてもパネルが伸びすぎないよう、一定の高さを超えたらスクロール */
+    max-height: 200px;
+    overflow-y: auto;
+    position: relative; /* カードの offsetTop の基準（選択カードを見える位置へスクロールするため） */
+    overscroll-behavior: contain;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: #3a4a6a #13161e;
   }
+  #type-grid::-webkit-scrollbar { width: 6px; }
+  #type-grid::-webkit-scrollbar-track { background: #13161e; border-radius: 3px; }
+  #type-grid::-webkit-scrollbar-thumb { background: #3a4a6a; border-radius: 3px; }
+  #type-grid::-webkit-scrollbar-thumb:hover { background: #4a90d9; }
   .type-card {
     background: #1b1f2a;
     border: 1.5px solid #2a2f3d;

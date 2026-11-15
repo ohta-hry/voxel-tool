@@ -4,6 +4,7 @@ import { boxShape } from './box.js';
 import { crossPillarShape } from './cross-pillar.js';
 import { roofShape } from './roof.js';
 import { pillarShape } from './pillar.js';
+import { ellipseShape } from './ellipse.js';
 import { makeEdgeVoxelCubes } from './edge-voxel-group.js';
 
 // ── 形状プラグインのレジストリ ────────────────────────────────────────────────
@@ -25,6 +26,7 @@ registerShape(boxShape);          // 表示順 = 登録順
 registerShape(crossPillarShape);
 registerShape(roofShape);
 registerShape(pillarShape);
+registerShape(ellipseShape);
 
 /** @param {string} type */
 export const hasShape = type => shapes.has(type);

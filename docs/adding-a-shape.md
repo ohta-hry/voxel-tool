@@ -14,7 +14,7 @@
 
 - `edge` … 設置タイプ B/C は辺だけを置く（A は辺でなくても置く）。辺の定義は形状ごとに決めてよい（角欠け直方体のように、JS の辺ボクセル表示とは別定義でもよい。その場合は意図を `docs/save-format.md` の仕様表に書く）
 - `checker` … 設置タイプ C の市松。0 = gray_wool / 1 = white_wool。位相は形状ごとに決める
-- `kind` … 通常は `BODY`。屋根のように設置タイプによらず別の素材にしたい形状は `ROOF`（素材を増やすなら `styles.py` の `block_for`）
+- `kind` … 通常は `BODY`。屋根のように設置タイプによらず別の素材にしたい形状は `ROOF`、ピラー・楕円のように設置タイプごとに別のブロックにしたい形状は専用の kind（素材を増やすなら `voxel.py` の kind と `styles.py` の `block_for`）
 
 ## 手順A: 固有パラメータが無い形状（直方体・角欠け直方体と同じ種類）
 
@@ -76,6 +76,16 @@ Python
 2. `docs/save-format.md` の「形状ごとの固有キー」の表に、キーと意味を足す
 3. パラメータの値を変えたシーン（全ての向き・オン/オフなど）をテストに足す
 
+## サイズ欄の動きを形状ごとに変えたい場合（JS）
+
+形状に次を持たせると、サイズ欄の ±ボタンと直接入力の動きを変えられます（`js/ui/size-input.js` が使う）。
+
+- `sizeStep(id, state)` … ±ボタンの増減幅（既定 1）。楕円の「中心固定」は xz で 2
+- `resizeLinked(values, id, newSize, state)` … サイズ欄が変わったときの連動（他のサイズ欄・基準点の更新）。楕円の「円」「中心固定」
+- `sizeFromForm(values, state)` … 入力欄の値から実際のサイズを作る（ピラーの「長さ」）
+
+画面上のボタン（円・中心固定など）は、ピラー・楕円の `js/ui/*-controls.js` が見本です。
+
 ## 設置タイプ（A/B/C）を足したい場合
 
 形状の追加とは別の作業です。
@@ -90,6 +100,7 @@ Python
 |---|---|
 | `test_shape_parity.py` | JS の `SHAPE_TYPE` と Python の `SHAPES` が一致している（JS だけに足して書き出しで形が消える、を防ぐ） |
 | `test_shape_contract.py` | 全形状が `Voxel` を返し、同じ座標を重複して返さない。golden のシーンが各形状にある |
+| `test_ellipse.py` / `js/ellipse.test.mjs` | 楕円の仕様（A/B/C、辺の条件）と、JS と Python が共有の表 `tests/fixtures/ellipse_cases.json` で同じ結果になること |
 | `test_golden.py` | 登録済みシーンの出力が、お手本と一致する |
 | `test_manifest.py` | `py/manifest.json` が `py/` 配下と一致している（`python tools/make_py_manifest.py` で更新） |
 

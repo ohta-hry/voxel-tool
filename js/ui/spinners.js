@@ -1,16 +1,13 @@
-import { UI, TIMING } from '../config.js';
+import { TIMING } from '../config.js';
 import { updatePreview } from '../preview.js';
-import { queryAll, inputById } from '../dom-utils.js';
+import { queryAll } from '../dom-utils.js';
+import { stepInput, applyTypedInput } from './size-input.js';
 
-/** スピナー（±ボタン長押し連続入力・直接入力）を配線する */
+/** スピナー（±ボタン長押し連続入力・直接入力）を配線する。値の更新規則は size-input.js */
 export function initSpinners() {
   queryAll('.spin-btn').forEach(btn => {
     const fire = () => {
-      const id = btn.dataset.target;
-      const delta = parseInt(btn.dataset.delta);
-      const input = inputById(id);
-      const isSize = id.startsWith('s');
-      input.value = String(Math.max(isSize ? UI.minSize : UI.minOrigin, (parseInt(input.value) || 0) + delta));
+      stepInput(btn.dataset.target, parseInt(btn.dataset.delta));
       updatePreview();
     };
     btn.addEventListener('click', fire);
@@ -27,9 +24,7 @@ export function initSpinners() {
 
   /** @type {HTMLInputElement[]} */ (queryAll('.spin-input')).forEach(inp => {
     inp.addEventListener('input', () => {
-      const isSize = inp.id.startsWith('s');
-      if (isSize && parseInt(inp.value) < UI.minSize) inp.value = String(UI.minSize);
-      if (!isSize && parseInt(inp.value) < UI.minOrigin) inp.value = String(UI.minOrigin);
+      applyTypedInput(inp);
       updatePreview();
     });
   });

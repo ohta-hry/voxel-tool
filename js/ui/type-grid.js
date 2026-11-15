@@ -13,10 +13,21 @@ export function setActiveType(typeId) {
 
 // 選択カードの強調表示と、形状専用UI（controlsId）の表示切り替え
 
+// タイプ欄はスクロールできる。選択中のカードが枠の外にあれば、見える位置までスクロールする
+function scrollSelectedCardIntoView() {
+  const grid = dom.typeGrid;
+  const card = /** @type {HTMLElement | null} */ (grid.querySelector('.type-card.selected'));
+  if (!card || grid.clientHeight === 0) return; // 非表示のタブでは何もしない
+  const top = card.offsetTop; // grid が position:relative なので、grid 内の位置（スクロール量に依存しない）
+  if (top < grid.scrollTop) grid.scrollTop = top;
+  else if (top + card.offsetHeight > grid.scrollTop + grid.clientHeight) grid.scrollTop = top + card.offsetHeight - grid.clientHeight;
+}
+
 export function syncTypeCards() {
   queryAll('.type-card').forEach(card => {
     card.classList.toggle('selected', card.dataset.type === state.activeType);
   });
+  scrollSelectedCardIntoView();
   for (const shape of listShapes()) {
     if (!shape.controlsId) continue;
     const row = document.getElementById(shape.controlsId);
