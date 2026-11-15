@@ -3,9 +3,7 @@ import { camera, renderer } from '../scene.js';
 import { registry } from '../registry.js';
 import { enterEditMode, enterNormalMode } from './edit-mode.js';
 import { state } from '../state.js';
-
-const HOLD_DURATION_MS = 750;
-const MOVE_TOLERANCE_PX = 8;
+import { TIMING } from '../config.js';
 
 /** Enable selection of an existing shape by holding on it in the 3D viewport. */
 export function initViewportSelection() {
@@ -46,13 +44,13 @@ export function initViewportSelection() {
         enterNormalMode();
       }
       cancel();
-    }, HOLD_DURATION_MS);
+    }, TIMING.viewportSelectionHoldMs);
     hold = { id, x, y, timer };
   };
 
   canvas.addEventListener('pointerdown', onDown);
   canvas.addEventListener('pointermove', event => {
-    if (hold && hold.id === event.pointerId && Math.hypot(event.clientX - hold.x, event.clientY - hold.y) > MOVE_TOLERANCE_PX) cancel();
+    if (hold && hold.id === event.pointerId && Math.hypot(event.clientX - hold.x, event.clientY - hold.y) > TIMING.viewportSelectionMoveTolerancePx) cancel();
   });
   canvas.addEventListener('pointerup', cancel);
   canvas.addEventListener('pointercancel', cancel);

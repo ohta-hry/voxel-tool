@@ -76,6 +76,8 @@ export const TIMING = {
   feedbackMs: 1500,
   spinHoldDelayMs: 400,
   spinRepeatMs: 80,
+  viewportSelectionHoldMs: 750,
+  viewportSelectionMoveTolerancePx: 8,
 };
 
 // ── OrbitControls ─────────────────────────────────────────────────────────────
